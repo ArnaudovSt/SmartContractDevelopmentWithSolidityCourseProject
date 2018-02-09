@@ -1,0 +1,19 @@
+{
+  "name": "smartcontractdevelopmentwithsoliditycourseproject",
+  "version": "1.0.0",
+  "description": "Course project for the Smart Contract Development with Solidity course.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArnaudovSt/SmartContractDevelopmentWithSolidityCourseProject.git"
+  },
+  "author": "Stefan Arnaudov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ArnaudovSt/SmartContractDevelopmentWithSolidityCourseProject/issues"
+  },
+  "homepage": "https://github.com/ArnaudovSt/SmartContractDevelopmentWithSolidityCourseProject#readme"
+}
