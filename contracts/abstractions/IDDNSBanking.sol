@@ -5,7 +5,7 @@ interface IDDNSBanking {
 
     function changeExpiryPeriod(uint256 _newPeriod) public;
 
-    function changeWalletAddress(address _newWalletAddress) public;
+    function changeWallet(address _newWallet) public;
 
     function withdraw(uint256 _amount) public;
 }
