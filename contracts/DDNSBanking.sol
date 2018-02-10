@@ -6,7 +6,11 @@ import './abstractions/IDDNSBanking.sol';
 contract DDNSBanking is IDDNSBanking, Owned {
     uint256 public registrationCost = 1 ether;
     uint256 public expiryPeriod = 1 years;
-    address public wallet = owner;
+    address public wallet;
+
+    function DDNSBanking() public {
+        wallet = owner;
+    }
 
     function changeRegistrationCost(uint256 _newPrice) public onlyOwner {
         registrationCost = _newPrice;
