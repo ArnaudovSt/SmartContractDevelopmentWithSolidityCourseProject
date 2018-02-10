@@ -3,8 +3,9 @@ pragma solidity ^0.4.18;
 import './abstractions/IDDNSCore.sol';
 import './DDNSBanking.sol';
 import './common/SafeMath.sol';
+import './common/Destructible.sol';
 
-contract DDNSCore is DDNSBanking, IDDNSCore {
+contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
     using SafeMath for uint256;
 
     event NewDomain(bytes32 _domainName, bytes32 _ipAddress, address indexed _domainOwner, bytes12 _topLevelDomain);
