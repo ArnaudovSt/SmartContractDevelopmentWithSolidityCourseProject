@@ -50,7 +50,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 
         require(currentDomain.validUntil < now);
 
-        domains[_domainName] = DomainDetails(_ipAddress, now + expiryPeriod, msg.sender, _topLevelDomain);
+        domains[_domainName] = DomainDetails(_ipAddress, now.add(expiryPeriod), msg.sender, _topLevelDomain);
 
         if (currentDomain.validUntil == 0) {
             NewDomain(_domainName, _ipAddress, msg.sender, _topLevelDomain);
@@ -66,7 +66,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
         uint256 currentPrice = _adjustPrice(_domainName);
         require(msg.value >= currentPrice);
 
-        domains[_domainName].validUntil += 1 years;
+        domains[_domainName].validUntil = domains[_domainName].validUntil.add(1 years);
 
         RegistrationRenewed(_domainName, domains[_domainName].ipAddress, domains[_domainName].validUntil, domains[_domainName].domainOwner, domains[_domainName].topLevelDomain);
     }
@@ -93,7 +93,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
             while (_domainName[9 - multiplier] == 0) {
                 multiplier++;
             }
-            return registrationCost + registrationCost.div(multiplier * 10);
+            return registrationCost.add(registrationCost.div(multiplier * 10));
         }
         return registrationCost;
     }
