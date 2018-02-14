@@ -53,7 +53,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
         domains[_domainName] = DomainDetails(_ipAddress, now.add(expiryPeriod), msg.sender, _topLevelDomain);
 
         if (currentDomain.validUntil == 0) {
-            NewDomain(_domainName, _ipAddress, msg.sender, _topLevelDomain);
+            LogNewDomain(_domainName, _ipAddress, msg.sender, _topLevelDomain);
         }
     }
 
@@ -68,7 +68,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 
         domains[_domainName].validUntil = domains[_domainName].validUntil.add(1 years);
 
-        RegistrationRenewed(_domainName, domains[_domainName].ipAddress, domains[_domainName].validUntil, domains[_domainName].domainOwner, domains[_domainName].topLevelDomain);
+        LogRegistrationRenewed(_domainName, domains[_domainName].ipAddress, domains[_domainName].validUntil, domains[_domainName].domainOwner, domains[_domainName].topLevelDomain);
     }
 
     function editDomainIp(bytes32 _domainName, bytes32 _newIpAddress)
@@ -76,7 +76,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
         onlyDomainOwner(_domainName)
     {
         domains[_domainName].ipAddress = _newIpAddress;
-        EditedDomain(_domainName, _newIpAddress);
+        LogEditedDomain(_domainName, _newIpAddress);
     }
 
     function transferOwnership(bytes32 _domainName, address _to)
@@ -84,7 +84,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
         onlyDomainOwner(_domainName)
     {
         domains[_domainName].domainOwner = _to;
-        OwnershipTransfer(_domainName, msg.sender, _to);
+        LogOwnershipTransfer(_domainName, msg.sender, _to);
     }
 
     function _adjustPrice(bytes32 _domainName) private view returns (uint256) {
