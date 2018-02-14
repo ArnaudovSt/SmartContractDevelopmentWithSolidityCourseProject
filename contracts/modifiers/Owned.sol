@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
 contract Owned {
-    event OwnerChanged(address indexed _oldOwner, address _newOwner);
+    event LogOwnerChanged(address indexed _oldOwner, address _newOwner);
 
     address public owner;
 
@@ -16,7 +16,7 @@ contract Owned {
 
     function setOwner(address _newOwner) public {
         require(_newOwner != address(0));
-        OwnerChanged(owner, _newOwner);
+        LogOwnerChanged(owner, _newOwner);
         owner = _newOwner;
     }
 }

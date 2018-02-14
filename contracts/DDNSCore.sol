@@ -8,13 +8,13 @@ import './common/Destructible.sol';
 contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
     using SafeMath for uint256;
 
-    event NewDomain(bytes32 _domainName, bytes32 _ipAddress, address indexed _domainOwner, bytes12 _topLevelDomain);
+    event LogNewDomain(bytes32 _domainName, bytes32 _ipAddress, address indexed _domainOwner, bytes12 _topLevelDomain);
 
-    event RegistrationRenewed(bytes32 indexed _domainName, bytes32 _ipAddress, uint256 _validUntil, address indexed _domainOwner, bytes12 _topLevelDomain);
+    event LogRegistrationRenewed(bytes32 indexed _domainName, bytes32 _ipAddress, uint256 _validUntil, address indexed _domainOwner, bytes12 _topLevelDomain);
 
-    event EditedDomain(bytes32 indexed _domainName, bytes32 _newIpAddress);
+    event LogEditedDomain(bytes32 indexed _domainName, bytes32 _newIpAddress);
 
-    event OwnershipTransfer(bytes32 _domainName, address indexed _from, address indexed _to);
+    event LogOwnershipTransfer(bytes32 _domainName, address indexed _from, address indexed _to);
 
     struct DomainDetails {
         bytes32 ipAddress;
