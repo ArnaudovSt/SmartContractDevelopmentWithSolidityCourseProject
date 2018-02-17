@@ -3,30 +3,54 @@ pragma solidity ^0.4.18;
 import './modifiers/Owned.sol';
 import './abstractions/IDDNSBanking.sol';
 
+
 contract DDNSBanking is IDDNSBanking, Owned {
-    uint256 public registrationCost = 1 ether;
-    uint256 public expiryPeriod = 1 years;
-    address public wallet;
+	event LogCostChange(
+		uint256 _newPrice
+	);
 
-    function DDNSBanking() public {
-        wallet = owner;
-    }
+	event LogExpiryPeriodChange(
+		uint256 _newPeriod
+	);
 
-    function changeRegistrationCost(uint256 _newPrice) public onlyOwner {
-        registrationCost = _newPrice;
-    }
+	event LogWalletChange(
+		address _newWallet
+	);
 
-    function changeExpiryPeriod(uint256 _newPeriod) public onlyOwner {
-        expiryPeriod = _newPeriod;
-    }
+	event LogWithdrawal(
+		address indexed _invoker,
+		address indexed _wallet,
+		uint256 _amount
+	);
 
-    function changeWallet(address _newWallet) public onlyOwner {
-        require(_newWallet != address(0));
-        wallet = _newWallet;
-    }
+	uint256 public registrationCost = 1 ether;
+	uint256 public expiryPeriod = 1 years;
+	address public wallet;
 
-    function withdraw(uint256 _amount) public onlyOwner {
-        require(this.balance >= _amount);
-        wallet.transfer(_amount);
-    }
+	function DDNSBanking() public {
+		wallet = owner;
+	}
+
+	function changeRegistrationCost(uint256 _newPrice) public onlyOwner {
+		registrationCost = _newPrice;
+		LogCostChange(_newPrice);
+	}
+
+	function changeExpiryPeriod(uint256 _newPeriod) public onlyOwner {
+		require(_newPeriod >= 1 weeks);
+		expiryPeriod = _newPeriod;
+		LogExpiryPeriodChange(_newPeriod);
+	}
+
+	function changeWallet(address _newWallet) public onlyOwner {
+		require(_newWallet != address(0));
+		wallet = _newWallet;
+		LogWalletChange(_newWallet);
+	}
+
+	function withdraw(uint256 _amount) public onlyOwner {
+		require(this.balance >= _amount);
+		wallet.transfer(_amount);
+		LogWithdrawal(owner, wallet, _amount);
+	}
 }
