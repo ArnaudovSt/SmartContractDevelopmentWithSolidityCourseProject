@@ -44,6 +44,8 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 
 	bytes1 public constant BYTES_DEFAULT_VALUE = bytes1(0x00);
 	uint8 public constant DOMAIN_NAME_MIN_LENGTH = 5;
+	uint8 public constant TOP_LEVEL_DOMAIN_MIN_LENGTH = 1;
+	uint8 public constant IP_ADDRESS_MIN_LENGTH = 6;
 	uint8 public constant PRICE_INCREASE_BOUND_INDEX = 9;
 
 	mapping(bytes32 => DomainDetails) public domains;
@@ -51,7 +53,17 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 	modifier nameLengthRestricted(bytes32 _domainName) {
 		require(_domainName[DOMAIN_NAME_MIN_LENGTH] != BYTES_DEFAULT_VALUE);
 		_;
-	} 
+	}
+
+	modifier ipAddressLengthRestricted(bytes32 _ipAddress) {
+		require(_ipAddress[IP_ADDRESS_MIN_LENGTH] != BYTES_DEFAULT_VALUE);
+		_;
+	}
+
+	modifier topLevelDomainLengthRestricted(bytes12 _topLevelDomain) {
+		require(_topLevelDomain[TOP_LEVEL_DOMAIN_MIN_LENGTH] != BYTES_DEFAULT_VALUE);
+		_;
+	}
 
 	modifier nameLengthPriced(bytes32 _domainName) {
 		require(msg.value >= _adjustPriceToNameLength(_domainName));
@@ -71,6 +83,8 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		public
 		payable
 		nameLengthRestricted(_domainName)
+		ipAddressLengthRestricted(_ipAddress)
+		topLevelDomainLengthRestricted(_topLevelDomain)
 		nameLengthPriced(_domainName)
 	{
 		/* solium-disable-next-line security/no-block-members */
@@ -104,6 +118,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 	function editDomainIp(bytes32 _domainName, bytes32 _newIpAddress)
 		public
 		onlyDomainOwner(_domainName)
+		ipAddressLengthRestricted(_newIpAddress)
 	{
 		domains[_domainName].ipAddress = _newIpAddress;
 		LogEditedDomain(_domainName, _newIpAddress);
