@@ -65,7 +65,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		const oldCost = web3.fromWei(await sut.registrationCost());
 		const expectedCost = web3.toWei(2);
 		// Act
-		await sut.changeRegistrationCost(expectedCost, {from: owner});
+		await sut.changeRegistrationCost(expectedCost, { from: owner });
 		const newCost = await sut.registrationCost();
 		// Assert
 		assert.notEqual(oldCost, newCost, "Old cost is not different from the new cost!");
@@ -76,7 +76,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		// Arrange
 		const newCost = web3.toWei(2);
 		// Act
-		const result = sut.changeRegistrationCost(newCost, {from: anotherAccount});
+		const result = sut.changeRegistrationCost(newCost, { from: anotherAccount });
 		// Assert
 		await assertRevert(result);
 	});
@@ -98,7 +98,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		// Arrange
 		const newExpiryPeriod = constants.week + 1;
 		// Act
-		await sut.changeExpiryPeriod(newExpiryPeriod, {from: owner});
+		await sut.changeExpiryPeriod(newExpiryPeriod, { from: owner });
 		const result = await sut.expiryPeriod();
 		// Assert
 		assert.equal(newExpiryPeriod, result);
@@ -108,7 +108,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		// Arrange
 		const newExpiryPeriod = constants.week - 1;
 		// Act
-		const result = sut.changeExpiryPeriod(newExpiryPeriod, {from: owner});
+		const result = sut.changeExpiryPeriod(newExpiryPeriod, { from: owner });
 		// Assert
 		await assertRevert(result);
 	});
@@ -117,7 +117,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		// Arrange
 		const newExpiryPeriod = constants.week + 1;
 		// Act
-		const result = sut.changeExpiryPeriod(newExpiryPeriod, {from: anotherAccount});
+		const result = sut.changeExpiryPeriod(newExpiryPeriod, { from: anotherAccount });
 		// Assert
 		await assertRevert(result);
 	});
@@ -195,7 +195,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		const contractBalance = await web3.eth.getBalance(sut.address);
 		// Act
 		assert.equal(contractBalance.toString(10), 0);
-		const result =  sut.withdraw(transferValue, { from: owner });
+		const result = sut.withdraw(transferValue, { from: owner });
 		// Assert
 		assertRevert(result);
 	});
