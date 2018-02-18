@@ -90,7 +90,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		nameLengthPriced(_domainName)
 		onlyDomainOwner(_domainName)
 	{
-		domains[_domainName].validUntil = domains[_domainName].validUntil.add(1 years);
+		domains[_domainName].validUntil = domains[_domainName].validUntil.add(expiryPeriod);
 
 		LogRegistrationRenewed(
 			_domainName,
