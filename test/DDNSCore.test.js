@@ -43,6 +43,22 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		assert.equal(result, 5);
 	});
 
+	it("IP_ADDRESS_MIN_LENGTH constant Should have exact value", async () => {
+		// Arrange
+		// Act
+		const result = await sut.IP_ADDRESS_MIN_LENGTH();
+		// Assert
+		assert.equal(result, 6);
+	});
+
+	it("TOP_LEVEL_DOMAIN_MIN_LENGTH constant Should have exact value", async () => {
+		// Arrange
+		// Act
+		const result = await sut.TOP_LEVEL_DOMAIN_MIN_LENGTH();
+		// Assert
+		assert.equal(result, 1);
+	});
+
 	it("PRICE_INCREASE_BOUND_INDEX constant Should have exact value", async () => {
 		// Arrange
 		// Act
@@ -51,7 +67,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		assert.equal(result, 9);
 	});
 
-	it("registerDomain Should throw when domain name is shorter than or equal to DOMAIN_NAME_MIN_LENGTH", async () => {
+	it("registerDomain Should throw when the passed domain name is shorter than or equal to DOMAIN_NAME_MIN_LENGTH", async () => {
 		// Arrange
 		const shortDomainName = "short";
 		const ip = "127.0.0.1";
@@ -59,6 +75,30 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 		// Act
 		const result = sut.registerDomain(shortDomainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
+		// Assert
+		await assertRevert(result);
+	});
+
+	it("registerDomain Should throw when the passed ip address is shorter than or equal to IP_ADDRESS_MIN_LENGTH", async () => {
+		// Arrange
+		const domainName = "notshortanymore";
+		const shortIp = "0.0.1";
+		const topLevelDomain = "co.uk";
+		const currentPrice = await sut.registrationCost();
+		// Act
+		const result = sut.registerDomain(domainName, shortIp, topLevelDomain, { from: anotherAccount, value: currentPrice });
+		// Assert
+		await assertRevert(result);
+	});
+
+	it("registerDomain Should throw when the passed top-level domain is shorter than or equal to TOP_LEVEL_DOMAIN_MIN_LENGTH", async () => {
+		// Arrange
+		const domainName = "notshortanymore";
+		const ip = "127.0.0.1";
+		const shortTopLevelDomain = "c";
+		const currentPrice = await sut.registrationCost();
+		// Act
+		const result = sut.registerDomain(domainName, ip, shortTopLevelDomain, { from: anotherAccount, value: currentPrice });
 		// Assert
 		await assertRevert(result);
 	});
@@ -271,6 +311,20 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		// Act
 		const anotherIp = "localhost";
 		const result = sut.editDomainIp(domainName, anotherIp, { from: anotherAccount });
+		// Assert
+		assertRevert(result);
+	});
+
+	it("editDomainIp Should throw when the passed ip address is shorter than or equal to IP_ADDRESS_MIN_LENGTH", async () => {
+		// Arrange
+		const domainName = "notshortanymore";
+		const ip = "127.0.0.1";
+		const topLevelDomain = "co.uk";
+		const currentPrice = await sut.registrationCost();
+		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
+		// Act
+		const shortIp = "0.0.1";
+		const result = sut.editDomainIp(domainName, shortIp, { from: owner });
 		// Assert
 		assertRevert(result);
 	});
