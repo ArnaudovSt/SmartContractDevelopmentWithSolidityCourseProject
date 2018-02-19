@@ -42,13 +42,20 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		bytes12 topLevelDomain;
 	}
 
+	struct Receipt {
+		bytes32 domainName;
+		uint256 amountPaid;
+		uint256 timeBought;
+	}
+
 	bytes1 public constant BYTES_DEFAULT_VALUE = bytes1(0x00);
 	uint8 public constant DOMAIN_NAME_MIN_LENGTH = 5;
-	uint8 public constant TOP_LEVEL_DOMAIN_MIN_LENGTH = 1;
 	uint8 public constant IP_ADDRESS_MIN_LENGTH = 6;
+	uint8 public constant TOP_LEVEL_DOMAIN_MIN_LENGTH = 1;
 	uint8 public constant PRICE_INCREASE_BOUND_INDEX = 9;
 
 	mapping(bytes32 => DomainDetails) public domains;
+	mapping(address => Receipt[]) public receipts;
 
 	modifier nameLengthRestricted(bytes32 _domainName) {
 		require(_domainName[DOMAIN_NAME_MIN_LENGTH] != BYTES_DEFAULT_VALUE);
@@ -96,6 +103,8 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 
 		/* solium-disable-next-line security/no-block-members */
 		domains[_domainName] = DomainDetails(_ipAddress, now.add(expiryPeriod), msg.sender, _topLevelDomain);
+
+		_issueReceipt(_domainName);
 	}
 
 	function renewDomainRegistration(bytes32 _domainName)
@@ -113,6 +122,8 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 			domains[_domainName].domainOwner,
 			domains[_domainName].topLevelDomain
 		);
+
+		_issueReceipt(_domainName);
 	}
 
 	function editDomainIp(bytes32 _domainName, bytes32 _newIpAddress)
@@ -146,5 +157,11 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 
 	function _isNewDomainRegistration(bytes32 _domainName) private view returns(bool) {
 		return domains[_domainName].validUntil == 0;
+	}
+
+	function _issueReceipt(bytes32 _domainName) private {
+		/* solium-disable-next-line security/no-block-members */
+		Receipt memory receipt = Receipt(_domainName, msg.value, now);
+		receipts[msg.sender].push(receipt);
 	}
 }
