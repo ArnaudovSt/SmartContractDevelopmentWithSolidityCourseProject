@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/ArnaudovSt/SmartContractDevelopmentWithSolidityCourseProject/issues"
   },
-  "homepage": "https://github.com/ArnaudovSt/SmartContractDevelopmentWithSolidityCourseProject#readme"
+  "homepage": "https://github.com/ArnaudovSt/SmartContractDevelopmentWithSolidityCourseProject#readme",
+  "devDependencies": {
+    "solidity-coverage": "^0.4.9"
+  }
 }

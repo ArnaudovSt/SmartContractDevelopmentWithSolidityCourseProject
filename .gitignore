@@ -61,3 +61,6 @@ typings/
 .vscode/
 build/
 bin/
+coverage/
+coverage.json
+package-lock.json

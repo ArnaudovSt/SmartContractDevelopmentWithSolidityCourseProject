@@ -155,13 +155,13 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const topLevelDomain = "co.uk";
 		const currentPrice = await sut.registrationCost();
 		// Act
-		await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
+		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
 
 		const domainNameBytes = web3.fromUtf8(domainName);
 		const result = await sut.domains(domainNameBytes);
 
 		const expiryPeriod = await sut.expiryPeriod();
-		const now = web3.eth.getBlock("latest").timestamp;
+		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(now);
 		// Assert
 		assert.ok(result, "No domain with such name was found.");
@@ -179,13 +179,13 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		let currentPrice = await sut.registrationCost();
 		currentPrice = currentPrice.plus(currentPrice.div(10));
 		// Act
-		await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
+		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
 
 		const domainNameBytes = web3.fromUtf8(domainName);
 		const result = await sut.domains(domainNameBytes);
 
 		const expiryPeriod = await sut.expiryPeriod();
-		const now = web3.eth.getBlock("latest").timestamp;
+		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(now);
 		// Assert
 		assert.ok(result, "No domain with such name was found.");
@@ -260,7 +260,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const ip = "127.0.0.1";
 		const topLevelDomain = "co.uk";
 		const currentPrice = await sut.registrationCost();
-		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
+		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
 		await sut.renewDomainRegistration(domainName, { from: owner, value: currentPrice });
 
@@ -268,7 +268,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const domainDetails = await sut.domains(domainNameBytes);
 
 		const expiryPeriod = await sut.expiryPeriod();
-		const now = web3.eth.getBlock("latest").timestamp;
+		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(expiryPeriod).add(now);
 		// Assert
 		assert.ok(domainDetails, "No domain with such name was found.");
@@ -285,13 +285,13 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const event = sut.LogRegistrationRenewed();
 		let promiEvent = watchEvent(event);
 		events.push(event);
+		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
-		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		await sut.renewDomainRegistration(domainName, { from: owner, value: currentPrice });
 		const result = await promiEvent;
 
 		const expiryPeriod = await sut.expiryPeriod();
-		const now = web3.eth.getBlock("latest").timestamp;
+		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(expiryPeriod).add(now);
 		// Assert
 		assert.equal(web3.toUtf8(result.args._domainName), domainName, "Wrong _domainName value.");

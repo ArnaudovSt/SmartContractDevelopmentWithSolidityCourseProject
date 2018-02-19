@@ -4,9 +4,7 @@ module.exports = (event) => {
 			if (err) {
 				reject(err);
 			}
-
 			resolve(res);
 		})
 	});
 }
-
