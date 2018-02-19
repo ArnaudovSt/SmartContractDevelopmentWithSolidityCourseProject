@@ -35,6 +35,13 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		address indexed _to
 	);
 
+	event LogReceipt(
+		address indexed _receiver,
+		bytes32 _domainName,
+		uint256 _amountPaid,
+		uint256 _timeBought
+	);
+
 	struct DomainDetails {
 		bytes32 ipAddress;
 		uint256 validUntil;
@@ -163,5 +170,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		/* solium-disable-next-line security/no-block-members */
 		Receipt memory receipt = Receipt(_domainName, msg.value, now);
 		receipts[msg.sender].push(receipt);
+
+		LogReceipt(msg.sender, _domainName, msg.value, receipt.timeBought);
 	}
 }
