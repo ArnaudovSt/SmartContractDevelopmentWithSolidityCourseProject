@@ -126,6 +126,9 @@ contract DDNSCore is DDNSBanking, Destructible {
 		onlyDomainOwner(_domainName, _topLevelDomain)
 	{
 		bytes32 key = getDomainKey(_domainName, _topLevelDomain);
+		/* solium-disable-next-line security/no-block-members */
+		require(domains[key].validUntil > now);
+
 		domains[key].validUntil = domains[key].validUntil.add(expiryPeriod);
 
 		LogRegistrationRenewed(
