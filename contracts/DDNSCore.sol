@@ -1,12 +1,11 @@
 pragma solidity ^0.4.18;
 
-import './abstractions/IDDNSCore.sol';
 import './DDNSBanking.sol';
 import './common/SafeMath.sol';
 import './common/Destructible.sol';
 
 
-contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
+contract DDNSCore is DDNSBanking, Destructible {
 	using SafeMath for uint256;
 
 	event LogNewDomain(
@@ -26,11 +25,13 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 
 	event LogEditedDomain(
 		bytes32 indexed domainName,
+		bytes12 topLevelDomain,
 		bytes32 newIpAddress
 	);
 
 	event LogOwnershipTransfer(
 		bytes32 domainName,
+		bytes12 topLevelDomain,
 		address indexed from,
 		address indexed to
 	);
@@ -145,7 +146,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 	{
 		bytes32 key = getDomainKey(_domainName, _topLevelDomain);
 		domains[key].ipAddress = _newIpAddress;
-		LogEditedDomain(_domainName, _newIpAddress);
+		LogEditedDomain(_domainName, _topLevelDomain, _newIpAddress);
 	}
 
 	function transferOwnership(bytes32 _domainName, bytes12 _topLevelDomain, address _to)
@@ -157,7 +158,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		bytes32 key = getDomainKey(_domainName, _topLevelDomain);
 
 		domains[key].domainOwner = _to;
-		LogOwnershipTransfer(_domainName, msg.sender, _to);
+		LogOwnershipTransfer(_domainName, _topLevelDomain, msg.sender, _to);
 	}
 
 	function getDomainPrice(bytes32 _domainName) public view returns (uint256) {
@@ -186,7 +187,7 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 	function _issueReceipt(bytes32 _domainName) private {
 		/* solium-disable-next-line security/no-block-members */
 		receipts[msg.sender].push(Receipt(_domainName, msg.value, now));
-
+		/* solium-disable-next-line security/no-block-members */
 		LogReceipt(msg.sender, _domainName, msg.value, now);
 	}
 }

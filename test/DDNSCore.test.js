@@ -136,16 +136,16 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 
 		const event = sut.LogNewDomain();
-		let promiEvent = watchEvent(event);
+		const promiEvent = watchEvent(event);
 		events.push(event);
 		// Act
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
 		const result = await promiEvent;
 		// Assert
-		assert.equal(web3.toUtf8(result.args._domainName), domainName, "Wrong _domainName value.");
-		assert.equal(web3.toUtf8(result.args._ipAddress), ip, "Wrong _ipAddress value.");
-		assert.equal(result.args._domainOwner, anotherAccount, "Wrong _domainOwner value.");
-		assert.equal(web3.toUtf8(result.args._topLevelDomain), topLevelDomain, "Wrong _topLevelDomain value.");
+		assert.equal(web3.toUtf8(result.args.domainName), domainName, "Wrong domainName value.");
+		assert.equal(web3.toUtf8(result.args.ipAddress), ip, "Wrong ipAddress value.");
+		assert.equal(result.args.domainOwner, anotherAccount, "Wrong domainOwner value.");
+		assert.equal(web3.toUtf8(result.args.topLevelDomain), topLevelDomain, "Wrong topLevelDomain value.");
 	});
 
 	it("registerDomain Should raise LogReceipt event when successfully registering a domain", async () => {
@@ -156,7 +156,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 
 		const event = sut.LogReceipt();
-		let promiEvent = watchEvent(event);
+		const promiEvent = watchEvent(event);
 		events.push(event);
 		// Act
 		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
@@ -164,10 +164,10 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 
 		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		// Assert
-		assert.equal(result.args._receiver, owner, "Wrong _receiver value.");
-		assert.equal(web3.toUtf8(result.args._domainName), domainName, "Wrong _domainName value.");
-		assert.deepEqual(result.args._amountPaid, currentPrice, "Wrong _ipAddress value.");
-		assert.equal(result.args._timeBought, now, "Wrong _timeBought value.");
+		assert.equal(result.args.receiver, owner, "Wrong receiver value.");
+		assert.equal(web3.toUtf8(result.args.domainName), domainName, "Wrong domainName value.");
+		assert.deepEqual(result.args.amountPaid, currentPrice, "Wrong ipAddress value.");
+		assert.equal(result.args.timeBought, now, "Wrong timeBought value.");
 	});
 
 	it("registerDomain Should register regular-named domain on a regular price", async () => {
@@ -179,18 +179,19 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		// Act
 		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
 
-		const domainNameBytes = web3.fromUtf8(domainName);
-		const result = await sut.domains(domainNameBytes);
+		const domainKey = await sut.getDomainKey(domainName, topLevelDomain);
+		const result = await sut.domains(domainKey);
 
 		const expiryPeriod = await sut.expiryPeriod();
 		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(now);
 		// Assert
 		assert.ok(result, "No domain with such name was found.");
-		assert.equal(web3.toUtf8(result[0]), ip, "Wrong ipAddress value.");
-		assert.deepEqual(result[1], expectedValidUntil, "Wrong validUntil value.");
-		assert.equal(result[2], anotherAccount, "Wrong domainOwner value.");
-		assert.equal(web3.toUtf8(result[3]), topLevelDomain, "Wrong topLevelDomain value.");
+		assert.equal(web3.toUtf8(result[0]), domainName, "Wrong domainName value.");
+		assert.equal(web3.toUtf8(result[1]), ip, "Wrong ipAddress value.");
+		assert.deepEqual(result[2], expectedValidUntil, "Wrong validUntil value.");
+		assert.equal(result[3], anotherAccount, "Wrong domainOwner value.");
+		assert.equal(web3.toUtf8(result[4]), topLevelDomain, "Wrong topLevelDomain value.");
 	});
 
 	it("registerDomain Should register short-named domains on a higher price", async () => {
@@ -203,18 +204,19 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		// Act
 		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
 
-		const domainNameBytes = web3.fromUtf8(domainName);
-		const result = await sut.domains(domainNameBytes);
+		const domainKey = await sut.getDomainKey(domainName, topLevelDomain);
+		const result = await sut.domains(domainKey);
 
 		const expiryPeriod = await sut.expiryPeriod();
 		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(now);
 		// Assert
 		assert.ok(result, "No domain with such name was found.");
-		assert.equal(web3.toUtf8(result[0]), ip, "Wrong ipAddress value.");
-		assert.deepEqual(result[1], expectedValidUntil, "Wrong validUntil value.");
-		assert.equal(result[2], anotherAccount, "Wrong domainOwner value.");
-		assert.equal(web3.toUtf8(result[3]), topLevelDomain, "Wrong topLevelDomain value.");
+		assert.equal(web3.toUtf8(result[0]), domainName, "Wrong domainName value.");
+		assert.equal(web3.toUtf8(result[1]), ip, "Wrong ipAddress value.");
+		assert.deepEqual(result[2], expectedValidUntil, "Wrong validUntil value.");
+		assert.equal(result[3], anotherAccount, "Wrong domainOwner value.");
+		assert.equal(web3.toUtf8(result[4]), topLevelDomain, "Wrong topLevelDomain value.");
 	});
 
 	it("registerDomain Should throw when trying to register short-named domain on a regular price", async () => {
@@ -242,12 +244,12 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
 
-		const domainNameBytes = web3.fromUtf8(domainName);
-		const result = await sut.domains(domainNameBytes);
+		const domainKey = await sut.getDomainKey(domainName, topLevelDomain);
+		const result = await sut.domains(domainKey);
 
 		// Assert
 		assert.ok(result, "No domain with such name was found.");
-		assert.equal(result[2], anotherAccount, "Wrong domainOwner value.");
+		assert.equal(result[3], anotherAccount, "Wrong domainOwner value.");
 	});
 
 	// it("registerDomain Should issue receipt when passed valid arguments", async () => {
@@ -278,7 +280,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
 		// Act
-		const result = sut.renewDomainRegistration(domainName, { from: anotherAccount, value: currentPrice.minus(1) });
+		const result = sut.renewDomainRegistration(domainName, topLevelDomain, { from: anotherAccount, value: currentPrice.minus(1) });
 		// Assert
 		await assertRevert(result);
 	});
@@ -291,7 +293,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
-		const result = sut.renewDomainRegistration(domainName, { from: anotherAccount, value: currentPrice });
+		const result = sut.renewDomainRegistration(domainName, topLevelDomain, { from: anotherAccount, value: currentPrice });
 		// Assert
 		await assertRevert(result);
 	});
@@ -304,17 +306,17 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
-		await sut.renewDomainRegistration(domainName, { from: owner, value: currentPrice });
+		await sut.renewDomainRegistration(domainName, topLevelDomain, { from: owner, value: currentPrice });
 
-		const domainNameBytes = web3.fromUtf8(domainName);
-		const domainDetails = await sut.domains(domainNameBytes);
+		const domainKey = await sut.getDomainKey(domainName, topLevelDomain);
+		const domainDetails = await sut.domains(domainKey);
 
 		const expiryPeriod = await sut.expiryPeriod();
 		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(expiryPeriod).add(now);
 		// Assert
 		assert.ok(domainDetails, "No domain with such name was found.");
-		assert.deepEqual(domainDetails[1], expectedValidUntil, "Wrong validUntil value.");
+		assert.deepEqual(domainDetails[2], expectedValidUntil, "Wrong validUntil value.");
 	});
 
 	it("renewDomainRegistration Should raise LogRegistrationRenewed event when called with valid arguments", async () => {
@@ -325,22 +327,22 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 
 		const event = sut.LogRegistrationRenewed();
-		let promiEvent = watchEvent(event);
+		const promiEvent = watchEvent(event);
 		events.push(event);
 		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
-		await sut.renewDomainRegistration(domainName, { from: owner, value: currentPrice });
+		await sut.renewDomainRegistration(domainName, topLevelDomain, { from: owner, value: currentPrice });
 		const result = await promiEvent;
 
 		const expiryPeriod = await sut.expiryPeriod();
 		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(expiryPeriod).add(now);
 		// Assert
-		assert.equal(web3.toUtf8(result.args._domainName), domainName, "Wrong _domainName value.");
-		assert.equal(web3.toUtf8(result.args._ipAddress), ip, "Wrong _ipAddress value.");
-		assert.deepEqual(result.args._validUntil, expectedValidUntil, "Wrong validUntil value.");
-		assert.equal(result.args._domainOwner, owner, "Wrong _domainOwner value.");
-		assert.equal(web3.toUtf8(result.args._topLevelDomain), topLevelDomain, "Wrong _topLevelDomain value.");
+		assert.equal(web3.toUtf8(result.args.domainName), domainName, "Wrong domainName value.");
+		assert.equal(web3.toUtf8(result.args.ipAddress), ip, "Wrong ipAddress value.");
+		assert.deepEqual(result.args.validUntil, expectedValidUntil, "Wrong validUntil value.");
+		assert.equal(result.args.domainOwner, owner, "Wrong domainOwner value.");
+		assert.equal(web3.toUtf8(result.args.topLevelDomain), topLevelDomain, "Wrong topLevelDomain value.");
 	});
 
 	// it("renewDomainRegistration Should issue receipt when passed valid arguments", async () => {
@@ -352,7 +354,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 	// 	const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 	// 	const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 	// 	// Act
-	// 	await sut.renewDomainRegistration(domainName, { from: owner, value: currentPrice });
+	// 	await sut.renewDomainRegistration(domainName, topLevelDomain, { from: owner, value: currentPrice });
 
 	// 	const result = await sut.receipts(owner); // Error: Invalid number of arguments to Solidity function
 	// 	// Assert
@@ -372,7 +374,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
 		const anotherIp = "localhost";
-		const result = sut.editDomainIp(domainName, anotherIp, { from: anotherAccount });
+		const result = sut.editDomainIp(domainName, topLevelDomain, anotherIp, { from: anotherAccount });
 		// Assert
 		assertRevert(result);
 	});
@@ -386,7 +388,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
 		const shortIp = "0.0.1";
-		const result = sut.editDomainIp(domainName, shortIp, { from: owner });
+		const result = sut.editDomainIp(domainName, topLevelDomain, shortIp, { from: owner });
 		// Assert
 		assertRevert(result);
 	});
@@ -400,12 +402,12 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
 		const anotherIp = "localhost";
-		await sut.editDomainIp(domainName, anotherIp, { from: owner });
+		await sut.editDomainIp(domainName, topLevelDomain, anotherIp, { from: owner });
 
-		const domainNameBytes = web3.fromUtf8(domainName);
-		const domainDetails = await sut.domains(domainNameBytes);
+		const domainKey = await sut.getDomainKey(domainName, topLevelDomain);
+		const domainDetails = await sut.domains(domainKey);
 		// Assert
-		assert.equal(web3.toUtf8(domainDetails[0]), anotherIp);
+		assert.equal(web3.toUtf8(domainDetails[1]), anotherIp);
 	});
 
 	it("editDomainIp Should raise LogEditedDomain event when called with valid arguments", async () => {
@@ -416,16 +418,17 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 
 		const event = sut.LogEditedDomain();
-		let promiEvent = watchEvent(event);
+		const promiEvent = watchEvent(event);
 		events.push(event);
 		// Act
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		const anotherIp = "localhost";
-		await sut.editDomainIp(domainName, anotherIp, { from: owner });
+		await sut.editDomainIp(domainName, topLevelDomain, anotherIp, { from: owner });
 		const result = await promiEvent;
 		// Assert
-		assert.equal(web3.toUtf8(result.args._domainName), domainName, "Wrong _domainName value.");
-		assert.equal(web3.toUtf8(result.args._newIpAddress), anotherIp, "Wrong _newIpAddress value.");
+		assert.equal(web3.toUtf8(result.args.domainName), domainName, "Wrong domainName value.");
+		assert.equal(web3.toUtf8(result.args.topLevelDomain), topLevelDomain, "Wrong topLevelDomain value.");
+		assert.equal(web3.toUtf8(result.args.newIpAddress), anotherIp, "Wrong newIpAddress value.");
 	});
 
 	it("transferOwnership Should throw when the invoker is not the domain owner", async () => {
@@ -436,7 +439,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
-		const result = sut.transferOwnership(domainName, anotherAccount, { from: anotherAccount });
+		const result = sut.transferOwnership(domainName, topLevelDomain, anotherAccount, { from: anotherAccount });
 		// Assert
 		assertRevert(result);
 	});
@@ -449,7 +452,7 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
-		const result = sut.transferOwnership(domainName, '0x00', { from: owner });
+		const result = sut.transferOwnership(domainName, topLevelDomain, '0x00', { from: owner });
 		// Assert
 		assertRevert(result);
 	});
@@ -462,11 +465,11 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const currentPrice = await sut.registrationCost();
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 		// Act
-		await sut.transferOwnership(domainName, anotherAccount, { from: owner });
-		const domainNameBytes = web3.fromUtf8(domainName);
-		const domainDetails = await sut.domains(domainNameBytes);
+		await sut.transferOwnership(domainName, topLevelDomain, anotherAccount, { from: owner });
+		const domainKey = await sut.getDomainKey(domainName, topLevelDomain);
+		const domainDetails = await sut.domains(domainKey);
 		// Assert
-		assert.equal(domainDetails[2], anotherAccount);
+		assert.equal(domainDetails[3], anotherAccount);
 	});
 
 	it("transferOwnership Should raise LogOwnershipTransfer event when called with valid arguments", async () => {
@@ -479,14 +482,15 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 
 		const event = sut.LogOwnershipTransfer();
-		let promiEvent = watchEvent(event);
+		const promiEvent = watchEvent(event);
 		events.push(event);
 		// Act
-		await sut.transferOwnership(domainName, anotherAccount, { from: owner });
+		await sut.transferOwnership(domainName, topLevelDomain, anotherAccount, { from: owner });
 		const result = await promiEvent;
 		// Assert
-		assert.equal(web3.toUtf8(result.args._domainName), domainName, "Wrong _domainName value.");
-		assert.equal(result.args._from, owner, "Wrong sender address value.");
-		assert.equal(result.args._to, anotherAccount, "Wrong receiver address value.");
+		assert.equal(web3.toUtf8(result.args.domainName), domainName, "Wrong domainName value.");
+		assert.equal(web3.toUtf8(result.args.topLevelDomain), topLevelDomain, "Wrong topLevelDomain value.");
+		assert.equal(result.args.from, owner, "Wrong sender address value.");
+		assert.equal(result.args.to, anotherAccount, "Wrong receiver address value.");
 	});
 })

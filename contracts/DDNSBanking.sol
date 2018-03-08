@@ -1,10 +1,9 @@
 pragma solidity ^0.4.18;
 
 import './modifiers/Owned.sol';
-import './abstractions/IDDNSBanking.sol';
 
 
-contract DDNSBanking is IDDNSBanking, Owned {
+contract DDNSBanking is Owned {
 	event LogCostChange(
 		uint256 _newPrice
 	);
