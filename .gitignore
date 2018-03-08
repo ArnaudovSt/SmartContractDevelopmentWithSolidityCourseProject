@@ -64,3 +64,5 @@ bin/
 coverage/
 coverage.json
 package-lock.json
+.idea
+*.iml
