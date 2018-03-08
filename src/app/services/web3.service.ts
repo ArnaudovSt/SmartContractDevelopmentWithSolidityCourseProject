@@ -38,6 +38,14 @@ export class Web3Service {
 		return this.web3.utils.toChecksumAddress(address);
 	}
 
+	public fromWei(amount: (number | string)) {
+		return this.web3.utils.fromWei(amount, 'ether');
+	}
+
+	public toWei(amount: (number | string)) {
+		return this.web3.utils.toWei(amount, 'ether');
+	}
+
 	private bootstrapWeb3() {
 		// Checking if Web3 has been injected by the browser (Mist/MetaMask)
 		if (typeof window.web3 !== 'undefined') {

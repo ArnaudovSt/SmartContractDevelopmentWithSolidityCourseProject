@@ -6,18 +6,18 @@ import { OwnerComponent } from './components/owner/owner.component';
 import { ReceiptsComponent } from './components/receipts/receipts.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: 'home', component: HomeComponent },
-  { path: 'domain', component: DomainComponent },
-  { path: 'owner', component: OwnerComponent },
-  { path: 'receipts', component: ReceiptsComponent },
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: '**', redirectTo: 'home', pathMatch: 'full' }
+	{ path: '', redirectTo: 'home', pathMatch: 'full' },
+	{ path: 'home', component: HomeComponent },
+	{ path: 'domain', component: DomainComponent },
+	{ path: 'owner', component: OwnerComponent },
+	{ path: 'receipts', component: ReceiptsComponent },
+	{ path: '', redirectTo: 'home', pathMatch: 'full' },
+	{ path: '**', redirectTo: 'home', pathMatch: 'full' }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule],
-  providers: []
+	imports: [RouterModule.forRoot(routes)],
+	exports: [RouterModule],
+	providers: []
 })
 export class AppRoutingModule { }

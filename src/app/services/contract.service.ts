@@ -35,14 +35,14 @@ export class ContractService implements OnInit, OnDestroy {
 		this.DDNSCore.methods
 			.registerDomain(domainName, ipAddress, topLevelDomain)
 			.send({ value: domainPrice })
-			.on("transactionHash", (hash: string) => {
+			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`${domainName}.${topLevelDomain} registration transaction hash is ${hash}.`);
 			})
-			.on("receipt", (receipt: TransactionReceipt) => {
+			.on('receipt', (receipt: TransactionReceipt) => {
 				this.toastr.success(`Successfully registered ${domainName}.${topLevelDomain} at ${ipAddress}!`, `Transaction ${receipt.transactionHash} was mined.`);
 			})
-			.on("error", (err: string) => {
-				this.toastr.error(`Could not register ${domainName}.${topLevelDomain} at ${ipAddress} due to revert!`)
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not register ${domainName}.${topLevelDomain} at ${ipAddress} due to revert!`);
 				console.error(err);
 			});
 	}
@@ -60,14 +60,14 @@ export class ContractService implements OnInit, OnDestroy {
 		this.DDNSCore.methods
 			.renewDomainRegistration(domainName, topLevelDomain)
 			.send({ value: domainPrice })
-			.on("transactionHash", (hash: string) => {
+			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`${domainName}.${topLevelDomain} renew transaction hash is ${hash}.`);
 			})
-			.on("receipt", (receipt: TransactionReceipt) => {
+			.on('receipt', (receipt: TransactionReceipt) => {
 				this.toastr.success(`Successfully registered ${domainName}.${topLevelDomain}!`, `Transaction ${receipt.transactionHash} was mined.`);
 			})
-			.on("error", (err: string) => {
-				this.toastr.error(`Could not renew ${domainName}.${topLevelDomain} due to revert!`)
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not renew ${domainName}.${topLevelDomain} due to revert!`);
 				console.error(err);
 			});
 	}
@@ -88,14 +88,14 @@ export class ContractService implements OnInit, OnDestroy {
 		this.DDNSCore.methods
 			.editDomainIp(domainName, topLevelDomain, newIpAddress)
 			.send()
-			.on("transactionHash", (hash: string) => {
+			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`${domainName}.${topLevelDomain} edit ip transaction hash is ${hash}.`);
 			})
-			.on("receipt", (receipt: TransactionReceipt) => {
+			.on('receipt', (receipt: TransactionReceipt) => {
 				this.toastr.success(`Successfully edited ${domainName}.${topLevelDomain} ip! The new ip is ${newIpAddress}.`, `Transaction ${receipt.transactionHash} was mined.`);
 			})
-			.on("error", (err: string) => {
-				this.toastr.error(`Could not edit ${domainName}.${topLevelDomain}'s ip due to revert!`)
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not edit ${domainName}.${topLevelDomain}'s ip due to revert!`);
 				console.error(err);
 			});
 	}
@@ -103,7 +103,7 @@ export class ContractService implements OnInit, OnDestroy {
 	public async transferOwnership(domainName: string, topLevelDomain: string, newOwnerAddress: string) {
 		const checksumAddress = this.web3Service.getChecksumAddress(newOwnerAddress);
 		if (!this.web3Service.isValidAddress(checksumAddress)) {
-			this.toastr.error('The provided new owner address is not correct! Please try again!');
+			this.toastr.error('The provided new owner address is not valid! Please try again!');
 			return;
 		}
 
@@ -117,14 +117,14 @@ export class ContractService implements OnInit, OnDestroy {
 		this.DDNSCore.methods
 			.transferOwnership(domainName, topLevelDomain, checksumAddress)
 			.send()
-			.on("transactionHash", (hash: string) => {
+			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`${domainName}.${topLevelDomain} ownership transfer transaction hash is ${hash}.`);
 			})
-			.on("receipt", (receipt: TransactionReceipt) => {
+			.on('receipt', (receipt: TransactionReceipt) => {
 				this.toastr.success(`Successfully transferred ${domainName}.${topLevelDomain} ownership! The new ip is ${checksumAddress}.`, `Transaction ${receipt.transactionHash} was mined.`);
 			})
-			.on("error", (err: string) => {
-				this.toastr.error(`Could not transfer ${domainName}.${topLevelDomain} ownership due to revert!`)
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not transfer ${domainName}.${topLevelDomain} ownership due to revert!`);
 				console.error(err);
 			});
 	}
@@ -132,7 +132,7 @@ export class ContractService implements OnInit, OnDestroy {
 	public async getOwnerReceipts(address: string) {
 		const checksumAddress = this.web3Service.getChecksumAddress(address);
 		if (!this.web3Service.isValidAddress(checksumAddress)) {
-			this.toastr.error('The provided owner address is not correct! Please try again!');
+			this.toastr.error('The provided owner address is not valid! Please try again!');
 			return;
 		}
 
@@ -155,6 +155,135 @@ export class ContractService implements OnInit, OnDestroy {
 		}
 
 		return this._getDomainPrice(domainName);
+	}
+
+	public async getRegistrationCost(): Promise<string> {
+		const registrationCost = await this.DDNSCore.methods.registrationCost().call();
+		return (this.web3Service.fromWei(registrationCost)).toString(10);
+	}
+
+	public async getExpiryPeriodInDays(): Promise<string> {
+		const expiryPeriod = await this.DDNSCore.methods.expiryPeriod().call();
+		return (expiryPeriod.div(86400)).toString(10); // 86400 seconds in 24h
+	}
+
+	public async getWallet() {
+		return this.DDNSCore.methods.wallet().call();
+	}
+
+	public async getOwner() {
+		return this.DDNSCore.methods.owner().call();
+	}
+
+	public async changeRegistrationCost(newPrice: (number | string)) {
+		if (Number(newPrice) <= 0) {
+			this.toastr.error(`The price must be positive!`);
+			return;
+		}
+
+		const isOwnerOperating = await this._isOwnerOperating();
+		if (!isOwnerOperating) {
+			this.toastr.error(`You must be the owner of the DDNS contract in order to change the registration cost!!`);
+			return;
+		}
+
+		const priceInWei = this.web3Service.toWei(newPrice);
+
+		this.DDNSCore.methods
+			.changeRegistrationCost(priceInWei)
+			.send()
+			.on('transactionHash', (hash: string) => {
+				this.toastr.info(`Registration cost change transaction hash is ${hash}.`);
+			})
+			.on('receipt', (receipt: TransactionReceipt) => {
+				this.toastr.success(`Successfully changed registration cost! The new price is ${newPrice} ETH`, `Transaction ${receipt.transactionHash} was mined.`);
+			})
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not change registration cost to ${newPrice} due to revert!`);
+				console.error(err);
+			});
+	}
+
+	public async changeExpiryPeriodInDays(newPeriod: (number | string)) {
+		newPeriod = Number(newPeriod);
+		if (newPeriod <= 7) {
+			this.toastr.error(`The period must be greater than 7 days!`);
+			return;
+		}
+
+		const isOwnerOperating = await this._isOwnerOperating();
+		if (!isOwnerOperating) {
+			this.toastr.error(`You must be the owner of the DDNS contract in order to change the expiry period!!`);
+			return;
+		}
+
+		const periodInSeconds = newPeriod * 86400;
+
+		this.DDNSCore.methods
+			.changeExpiryPeriod(periodInSeconds)
+			.send()
+			.on('transactionHash', (hash: string) => {
+				this.toastr.info(`Expiry period change transaction hash is ${hash}.`);
+			})
+			.on('receipt', (receipt: TransactionReceipt) => {
+				this.toastr.success(`Successfully changed expiry period! The new expiry period is ${newPeriod} days`, `Transaction ${receipt.transactionHash} was mined.`);
+			})
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not change expiry period to ${newPeriod} due to revert!`);
+				console.error(err);
+			});
+	}
+
+	public async changeWallet(newWalletAddress) {
+		const checksumAddress = this.web3Service.getChecksumAddress(newWalletAddress);
+		if (!this.web3Service.isValidAddress(checksumAddress)) {
+			this.toastr.error('The provided new wallet address is not valid! Please try again!');
+			return;
+		}
+
+		const isOwnerOperating = await this._isOwnerOperating();
+		if (!isOwnerOperating) {
+			this.toastr.error(`You must be the owner of the DDNS contract in order to change the wallet address!!`);
+			return;
+		}
+
+		this.DDNSCore.methods
+			.changeWallet(checksumAddress)
+			.send()
+			.on('transactionHash', (hash: string) => {
+				this.toastr.info(`Wallet change transaction hash is ${hash}.`);
+			})
+			.on('receipt', (receipt: TransactionReceipt) => {
+				this.toastr.success(`Successfully changed wallet! The new wallet address is ${checksumAddress}.`, `Transaction ${receipt.transactionHash} was mined.`);
+			})
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not change wallet to ${checksumAddress} due to revert!`);
+				console.error(err);
+			});
+	}
+
+	public async withdrawEther(amount: (string | number)) {
+		const isOwnerOperating = await this._isOwnerOperating();
+		if (!isOwnerOperating) {
+			this.toastr.error(`You must be the owner of the DDNS contract in order to withdraw funds!!`);
+			return;
+		}
+
+		const amountInWei = this.web3Service.toWei(amount);
+
+		this.DDNSCore.methods
+			.withdraw(amountInWei)
+			.send()
+			.on('transactionHash', (hash: string) => {
+				this.toastr.info(`Withdraw transaction hash is ${hash}.`);
+			})
+			.on('receipt', (receipt: TransactionReceipt) => {
+				this.toastr.success(`Successfully withdrew ${amount} ETH!`, `Transaction ${receipt.transactionHash} was mined.`);
+			})
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not withdraw ${amount} ETH due to revert!`);
+				console.error(err);
+			});
 	}
 
 	private async _initContract() {
@@ -199,5 +328,10 @@ export class ContractService implements OnInit, OnDestroy {
 
 	private async _getDomainOwner(domainName: string, topLevelDomain: string) {
 		return (await this._getDomainDetails(domainName, topLevelDomain))[3];
+	}
+
+	private async _isOwnerOperating() {
+		const contractOwner = await this.getOwner();
+		return contractOwner === this.DDNSCore.options.from;
 	}
 }
