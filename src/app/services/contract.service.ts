@@ -171,10 +171,6 @@ export class ContractService implements OnInit, OnDestroy {
 		return this.DDNSCore.methods.wallet().call();
 	}
 
-	public async getOwner() {
-		return this.DDNSCore.methods.owner().call();
-	}
-
 	public async changeRegistrationCost(newPrice: (number | string)) {
 		if (Number(newPrice) <= 0) {
 			this.toastr.error(`The price must be positive!`);
@@ -282,6 +278,88 @@ export class ContractService implements OnInit, OnDestroy {
 			})
 			.on('error', (err: string) => {
 				this.toastr.error(`Could not withdraw ${amount} ETH due to revert!`);
+				console.error(err);
+			});
+	}
+
+	public async getOwner() {
+		return this.DDNSCore.methods.owner().call();
+	}
+
+	public async setOwner(newOwner) {
+		const checksumAddress = this.web3Service.getChecksumAddress(newOwner);
+		if (!this.web3Service.isValidAddress(checksumAddress)) {
+			this.toastr.error('The provided new owner address is not valid! Please try again!');
+			return;
+		}
+
+		const isOwnerOperating = await this._isOwnerOperating();
+		if (!isOwnerOperating) {
+			this.toastr.error(`You must be the owner of the DDNS contract in order to set new owner!!`);
+			return;
+		}
+
+		this.DDNSCore.methods
+			.setOwner(checksumAddress)
+			.send()
+			.on('transactionHash', (hash: string) => {
+				this.toastr.info(`Owner setting transaction hash is ${hash}.`);
+			})
+			.on('receipt', (receipt: TransactionReceipt) => {
+				this.toastr.success(`Successfully set owner! The new owner address is ${checksumAddress}.`, `Transaction ${receipt.transactionHash} was mined.`);
+			})
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not set owner to ${checksumAddress} due to revert!`);
+				console.error(err);
+			});
+	}
+
+	public async destroy() {
+		const isOwnerOperating = await this._isOwnerOperating();
+		if (!isOwnerOperating) {
+			this.toastr.error(`You must be the owner of the DDNS contract in order to destroy it!!`);
+			return;
+		}
+
+		this.DDNSCore.methods
+			.destroy()
+			.send()
+			.on('transactionHash', (hash: string) => {
+				this.toastr.info(`Contract destroying transaction hash is ${hash}.`);
+			})
+			.on('receipt', (receipt: TransactionReceipt) => {
+				this.toastr.success(`Successfully destroyed the contract!`, `Transaction ${receipt.transactionHash} was mined.`);
+			})
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not destroy contract due to revert!`);
+				console.error(err);
+			});
+	}
+
+	public async destroyAndSend(recipient) {
+		const checksumAddress = this.web3Service.getChecksumAddress(recipient);
+		if (!this.web3Service.isValidAddress(checksumAddress)) {
+			this.toastr.error('The provided recipient address is not valid! Please try again!');
+			return;
+		}
+
+		const isOwnerOperating = await this._isOwnerOperating();
+		if (!isOwnerOperating) {
+			this.toastr.error(`You must be the owner of the DDNS contract in order to destroy the contract and send it's funds!!`);
+			return;
+		}
+
+		this.DDNSCore.methods
+			.destroyAndSend(checksumAddress)
+			.send()
+			.on('transactionHash', (hash: string) => {
+				this.toastr.info(`Contract destroying and fund sending transaction hash is ${hash}.`);
+			})
+			.on('receipt', (receipt: TransactionReceipt) => {
+				this.toastr.success(`Successfully destroyed contract! All funds are sent to ${checksumAddress}.`, `Transaction ${receipt.transactionHash} was mined.`);
+			})
+			.on('error', (err: string) => {
+				this.toastr.error(`Could not destroy contract and send funds to ${checksumAddress} due to revert!`);
 				console.error(err);
 			});
 	}
