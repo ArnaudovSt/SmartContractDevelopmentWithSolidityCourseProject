@@ -10,39 +10,40 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 	using SafeMath for uint256;
 
 	event LogNewDomain(
-		bytes32 _domainName,
-		bytes32 _ipAddress,
-		address indexed _domainOwner,
-		bytes12 _topLevelDomain
+		bytes32 domainName,
+		bytes32 ipAddress,
+		address indexed domainOwner,
+		bytes12 topLevelDomain
 	);
 
 	event LogRegistrationRenewed(
-		bytes32 indexed _domainName,
-		bytes32 _ipAddress,
-		uint256 _validUntil,
-		address indexed _domainOwner,
-		bytes12 _topLevelDomain
+		bytes32 indexed domainName,
+		bytes32 ipAddress,
+		uint256 validUntil,
+		address indexed domainOwner,
+		bytes12 topLevelDomain
 	);
 
 	event LogEditedDomain(
-		bytes32 indexed _domainName,
-		bytes32 _newIpAddress
+		bytes32 indexed domainName,
+		bytes32 newIpAddress
 	);
 
 	event LogOwnershipTransfer(
-		bytes32 _domainName,
-		address indexed _from,
-		address indexed _to
+		bytes32 domainName,
+		address indexed from,
+		address indexed to
 	);
 
 	event LogReceipt(
-		address indexed _receiver,
-		bytes32 _domainName,
-		uint256 _amountPaid,
-		uint256 _timeBought
+		address indexed receiver,
+		bytes32 domainName,
+		uint256 amountPaid,
+		uint256 timeBought
 	);
 
 	struct DomainDetails {
+		bytes32 domainName;
 		bytes32 ipAddress;
 		uint256 validUntil;
 		address domainOwner;
@@ -84,8 +85,9 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		_;
 	}
 
-	modifier onlyDomainOwner(bytes32 _domainName) {
-		require(domains[_domainName].domainOwner == msg.sender);
+	modifier onlyDomainOwner(bytes32 _domainName, bytes12 _topLevelDomain) {
+		bytes32 key = getDomainKey(_domainName, _topLevelDomain);
+		require(domains[key].domainOwner == msg.sender);
 		_;
 	}
 
@@ -101,54 +103,69 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		topLevelDomainLengthRestricted(_topLevelDomain)
 		nameLengthPriced(_domainName)
 	{
+		bytes32 key = getDomainKey(_domainName, _topLevelDomain);
+		
 		/* solium-disable-next-line security/no-block-members */
-		require(domains[_domainName].validUntil < now);
+		require(domains[key].validUntil < now);
 
-		if (_isNewDomainRegistration(_domainName)) {
+		if (_isNewDomainRegistration(key)) {
 			LogNewDomain(_domainName, _ipAddress, msg.sender, _topLevelDomain);
 		}
 
 		/* solium-disable-next-line security/no-block-members */
-		domains[_domainName] = DomainDetails(_ipAddress, now.add(expiryPeriod), msg.sender, _topLevelDomain);
+		domains[key] = DomainDetails(_domainName, _ipAddress, now.add(expiryPeriod), msg.sender, _topLevelDomain);
 
 		_issueReceipt(_domainName);
 	}
 
-	function renewDomainRegistration(bytes32 _domainName)
+	function renewDomainRegistration(bytes32 _domainName, bytes12 _topLevelDomain)
 		public
 		payable
 		nameLengthPriced(_domainName)
-		onlyDomainOwner(_domainName)
+		onlyDomainOwner(_domainName, _topLevelDomain)
 	{
-		domains[_domainName].validUntil = domains[_domainName].validUntil.add(expiryPeriod);
+		bytes32 key = getDomainKey(_domainName, _topLevelDomain);
+		domains[key].validUntil = domains[key].validUntil.add(expiryPeriod);
 
 		LogRegistrationRenewed(
 			_domainName,
-			domains[_domainName].ipAddress,
-			domains[_domainName].validUntil,
-			domains[_domainName].domainOwner,
-			domains[_domainName].topLevelDomain
+			domains[key].ipAddress,
+			domains[key].validUntil,
+			domains[key].domainOwner,
+			domains[key].topLevelDomain
 		);
 
 		_issueReceipt(_domainName);
 	}
 
-	function editDomainIp(bytes32 _domainName, bytes32 _newIpAddress)
+	function editDomainIp(bytes32 _domainName, bytes12 _topLevelDomain, bytes32 _newIpAddress)
 		public
-		onlyDomainOwner(_domainName)
+		onlyDomainOwner(_domainName, _topLevelDomain)
 		ipAddressLengthRestricted(_newIpAddress)
 	{
-		domains[_domainName].ipAddress = _newIpAddress;
+		bytes32 key = getDomainKey(_domainName, _topLevelDomain);
+		domains[key].ipAddress = _newIpAddress;
 		LogEditedDomain(_domainName, _newIpAddress);
 	}
 
-	function transferOwnership(bytes32 _domainName, address _to)
+	function transferOwnership(bytes32 _domainName, bytes12 _topLevelDomain, address _to)
 		public
-		onlyDomainOwner(_domainName)
+		onlyDomainOwner(_domainName, _topLevelDomain)
 	{
 		require(_to != address(0));
-		domains[_domainName].domainOwner = _to;
+
+		bytes32 key = getDomainKey(_domainName, _topLevelDomain);
+
+		domains[key].domainOwner = _to;
 		LogOwnershipTransfer(_domainName, msg.sender, _to);
+	}
+
+	function getDomainPrice(bytes32 _domainName) public view returns (uint256) {
+		return _adjustPriceToNameLength(_domainName);
+	}
+
+	function getDomainKey(bytes32 _domainName, bytes12 _topLevelDomain) public pure returns (bytes32) {
+		return keccak256(_domainName, _topLevelDomain);
 	}
 
 	function _adjustPriceToNameLength(bytes32 _domainName) private view returns (uint256) {
@@ -162,15 +179,14 @@ contract DDNSCore is DDNSBanking, Destructible, IDDNSCore {
 		return registrationCost;
 	}
 
-	function _isNewDomainRegistration(bytes32 _domainName) private view returns(bool) {
-		return domains[_domainName].validUntil == 0;
+	function _isNewDomainRegistration(bytes32 _key) private view returns(bool) {
+		return domains[_key].validUntil == 0;
 	}
 
 	function _issueReceipt(bytes32 _domainName) private {
 		/* solium-disable-next-line security/no-block-members */
-		Receipt memory receipt = Receipt(_domainName, msg.value, now);
-		receipts[msg.sender].push(receipt);
+		receipts[msg.sender].push(Receipt(_domainName, msg.value, now));
 
-		LogReceipt(msg.sender, _domainName, msg.value, receipt.timeBought);
+		LogReceipt(msg.sender, _domainName, msg.value, now);
 	}
 }
