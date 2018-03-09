@@ -1,18 +1,14 @@
 import { Injectable, OnInit, OnDestroy } from '@angular/core';
 import { Web3Service } from './web3.service';
-import contract_artifacts from '../../../build/contracts/DDNSCore.json';
 import { Contract, TransactionReceipt } from 'web3/types';
 import { ToastrService } from 'ngx-toastr';
+import * as contract_artifacts from '../../../build/contracts/DDNSCore.json';
 
 @Injectable()
-export class ContractService implements OnInit, OnDestroy {
+export class ContractService implements OnDestroy {
 	private DDNSCore: Contract;
 
 	constructor(private web3Service: Web3Service, private toastr: ToastrService) { }
-
-	ngOnInit(): void {
-		this._initContract();
-	}
 
 	ngOnDestroy() {
 		this.web3Service.accountsObservable.unsubscribe();
@@ -20,6 +16,8 @@ export class ContractService implements OnInit, OnDestroy {
 
 	public async registerDomain(domainName: string, ipAddress: string, topLevelDomain: string
 	) {
+		await this._checkContract();
+
 		if (!this._isValidDomain(domainName, topLevelDomain)) {
 			this.toastr.error('The whole domain name is not correct! Please try again!');
 			return;
@@ -32,7 +30,7 @@ export class ContractService implements OnInit, OnDestroy {
 
 		const domainPrice = await this._getDomainPrice(domainName);
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.registerDomain(domainName, ipAddress, topLevelDomain)
 			.send({ value: domainPrice })
 			.on('transactionHash', (hash: string) => {
@@ -48,6 +46,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async renewDomainRegistration(domainName: string, topLevelDomain: string) {
+		await this._checkContract();
+
 		const domainOwner = await this._getDomainOwner(domainName, topLevelDomain);
 
 		if (domainOwner !== this.DDNSCore.options.from) {
@@ -57,7 +57,7 @@ export class ContractService implements OnInit, OnDestroy {
 
 		const domainPrice = await this._getDomainPrice(domainName);
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.renewDomainRegistration(domainName, topLevelDomain)
 			.send({ value: domainPrice })
 			.on('transactionHash', (hash: string) => {
@@ -73,6 +73,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async editDomainIp(domainName: string, topLevelDomain: string, newIpAddress: string) {
+		await this._checkContract();
+
 		if (!this._isValidIp(newIpAddress)) {
 			this.toastr.error('The ip address is not correct! Please try again!');
 			return;
@@ -85,7 +87,7 @@ export class ContractService implements OnInit, OnDestroy {
 			return;
 		}
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.editDomainIp(domainName, topLevelDomain, newIpAddress)
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -101,6 +103,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async transferOwnership(domainName: string, topLevelDomain: string, newOwnerAddress: string) {
+		await this._checkContract();
+
 		const checksumAddress = this.web3Service.getChecksumAddress(newOwnerAddress);
 		if (!this.web3Service.isValidAddress(checksumAddress)) {
 			this.toastr.error('The provided new owner address is not valid! Please try again!');
@@ -114,7 +118,7 @@ export class ContractService implements OnInit, OnDestroy {
 			return;
 		}
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.transferOwnership(domainName, topLevelDomain, checksumAddress)
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -130,6 +134,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async getOwnerReceipts(address: string) {
+		await this._checkContract();
+
 		const checksumAddress = this.web3Service.getChecksumAddress(address);
 		if (!this.web3Service.isValidAddress(checksumAddress)) {
 			this.toastr.error('The provided owner address is not valid! Please try again!');
@@ -140,6 +146,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async getDomainDetails(domainName: string, topLevelDomain: string) {
+		await this._checkContract();
+
 		if (!this._isValidDomain(domainName, topLevelDomain)) {
 			this.toastr.error('The whole domain name is not correct! Please try again!');
 			return;
@@ -148,30 +156,41 @@ export class ContractService implements OnInit, OnDestroy {
 		return this._getDomainDetails(domainName, topLevelDomain);
 	}
 
-	public async getDomainPrice(domainName: string) {
+	public async getDomainPriceInEther(domainName: string) {
+		await this._checkContract();
+
 		if (!this._isValidDomain(domainName)) {
 			this.toastr.error(`The domain name ${domainName} is not correct! Please try again!`);
 			return;
 		}
 
-		return this._getDomainPrice(domainName);
+		const domainPriceInWei = await this._getDomainPrice(domainName);
+		return this.web3Service.fromWei(domainPriceInWei);
 	}
 
 	public async getRegistrationCost(): Promise<string> {
+		await this._checkContract();
+
 		const registrationCost = await this.DDNSCore.methods.registrationCost().call();
 		return (this.web3Service.fromWei(registrationCost)).toString(10);
 	}
 
 	public async getExpiryPeriodInDays(): Promise<string> {
+		await this._checkContract();
+
 		const expiryPeriod = await this.DDNSCore.methods.expiryPeriod().call();
 		return (expiryPeriod.div(86400)).toString(10); // 86400 seconds in 24h
 	}
 
 	public async getWallet() {
+		await this._checkContract();
+
 		return this.DDNSCore.methods.wallet().call();
 	}
 
 	public async changeRegistrationCost(newPrice: (number | string)) {
+		await this._checkContract();
+
 		if (Number(newPrice) <= 0) {
 			this.toastr.error(`The price must be positive!`);
 			return;
@@ -185,7 +204,7 @@ export class ContractService implements OnInit, OnDestroy {
 
 		const priceInWei = this.web3Service.toWei(newPrice);
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.changeRegistrationCost(priceInWei)
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -201,6 +220,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async changeExpiryPeriodInDays(newPeriod: (number | string)) {
+		await this._checkContract();
+
 		newPeriod = Number(newPeriod);
 		if (newPeriod <= 7) {
 			this.toastr.error(`The period must be greater than 7 days!`);
@@ -215,7 +236,7 @@ export class ContractService implements OnInit, OnDestroy {
 
 		const periodInSeconds = newPeriod * 86400;
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.changeExpiryPeriod(periodInSeconds)
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -231,6 +252,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async changeWallet(newWalletAddress) {
+		await this._checkContract();
+
 		const checksumAddress = this.web3Service.getChecksumAddress(newWalletAddress);
 		if (!this.web3Service.isValidAddress(checksumAddress)) {
 			this.toastr.error('The provided new wallet address is not valid! Please try again!');
@@ -243,7 +266,7 @@ export class ContractService implements OnInit, OnDestroy {
 			return;
 		}
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.changeWallet(checksumAddress)
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -259,6 +282,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async withdrawEther(amount: (string | number)) {
+		await this._checkContract();
+
 		const isOwnerOperating = await this._isOwnerOperating();
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to withdraw funds!!`);
@@ -267,7 +292,7 @@ export class ContractService implements OnInit, OnDestroy {
 
 		const amountInWei = this.web3Service.toWei(amount);
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.withdraw(amountInWei)
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -283,10 +308,14 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async getOwner() {
+		await this._checkContract();
+
 		return this.DDNSCore.methods.owner().call();
 	}
 
 	public async setOwner(newOwner) {
+		await this._checkContract();
+
 		const checksumAddress = this.web3Service.getChecksumAddress(newOwner);
 		if (!this.web3Service.isValidAddress(checksumAddress)) {
 			this.toastr.error('The provided new owner address is not valid! Please try again!');
@@ -299,7 +328,7 @@ export class ContractService implements OnInit, OnDestroy {
 			return;
 		}
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.setOwner(checksumAddress)
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -315,13 +344,15 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async destroy() {
+		await this._checkContract();
+
 		const isOwnerOperating = await this._isOwnerOperating();
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to destroy it!!`);
 			return;
 		}
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.destroy()
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -337,6 +368,8 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	public async destroyAndSend(recipient) {
+		await this._checkContract();
+
 		const checksumAddress = this.web3Service.getChecksumAddress(recipient);
 		if (!this.web3Service.isValidAddress(checksumAddress)) {
 			this.toastr.error('The provided recipient address is not valid! Please try again!');
@@ -349,7 +382,7 @@ export class ContractService implements OnInit, OnDestroy {
 			return;
 		}
 
-		this.DDNSCore.methods
+		return this.DDNSCore.methods
 			.destroyAndSend(checksumAddress)
 			.send()
 			.on('transactionHash', (hash: string) => {
@@ -365,8 +398,9 @@ export class ContractService implements OnInit, OnDestroy {
 	}
 
 	private async _initContract() {
-		const contractAbstraction = await this.web3Service.artifactsToContract(contract_artifacts);
-		this.DDNSCore = await contractAbstraction.deployed();
+		const ABI = contract_artifacts['abi'];
+		const address = contract_artifacts['networks']['1520559567221'].address;
+		this.DDNSCore = await this.web3Service.getContract(ABI, address);
 		this._watchAccount();
 	}
 
@@ -374,6 +408,12 @@ export class ContractService implements OnInit, OnDestroy {
 		this.web3Service.accountsObservable.subscribe((accounts) => {
 			this.DDNSCore.options.from = accounts[0];
 		});
+	}
+
+	private async _checkContract() {
+		if (!this.DDNSCore) {
+			await this._initContract();
+		}
 	}
 
 	private _isValidDomain(domainName: string, topLevelDomain = 'com') {

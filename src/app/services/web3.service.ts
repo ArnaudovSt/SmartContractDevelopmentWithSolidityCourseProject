@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
-import Web3 from 'web3';
-import { default as contract } from 'truffle-contract';
 import { Subject } from 'rxjs/Rx';
 import { ToastrService } from 'ngx-toastr';
+// import Web3 from 'web3'; /* https://github.com/ethereum/web3.js/issues/1155 */
+const Web3 = require('web3');
 
 declare let window: any;
 
 @Injectable()
 export class Web3Service {
-	private web3: Web3;
+	private web3: any;
 	private accounts: string[];
 	public accountsObservable = new Subject<string[]>();
 	private readonly provider: string = 'http://localhost:8545';
@@ -19,15 +19,12 @@ export class Web3Service {
 		});
 	}
 
-	public async artifactsToContract(artifacts) {
+	public async getContract(ABI, address) {
 		if (!this.web3) {
 			this.bootstrapWeb3();
 		}
 
-		const contractAbstraction = contract(artifacts);
-		contractAbstraction.setProvider(this.web3.currentProvider);
-		return contractAbstraction;
-
+		return new this.web3.eth.Contract(ABI, address);
 	}
 
 	public isValidAddress(address: string) {
@@ -44,6 +41,10 @@ export class Web3Service {
 
 	public toWei(amount: (number | string)) {
 		return this.web3.utils.toWei(amount, 'ether');
+	}
+
+	public toUtf8(bytes) {
+		return this.web3.utils.toUtf8(bytes);
 	}
 
 	private bootstrapWeb3() {
