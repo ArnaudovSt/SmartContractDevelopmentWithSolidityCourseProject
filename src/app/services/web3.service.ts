@@ -34,7 +34,11 @@ export class Web3Service {
 	}
 
 	public getChecksumAddress(address: string) {
-		return this.web3.utils.toChecksumAddress(address);
+		if (this.web3.utils.checkAddressChecksum(address)) {
+			return this.web3.utils.toChecksumAddress(address);
+		}
+
+		return '';
 	}
 
 	public fromWei(amount: (number | string)) {
