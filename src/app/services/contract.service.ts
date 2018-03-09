@@ -291,7 +291,7 @@ export class ContractService {
 			});
 	}
 
-	public async withdrawEther(amount: (string | number)) {
+	public async withdrawEthers(amount: (string | number)) {
 		await this._checkContract();
 
 		const from = await this.web3Service.getFromAccount();
