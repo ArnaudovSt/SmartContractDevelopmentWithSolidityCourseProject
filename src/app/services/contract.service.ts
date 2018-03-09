@@ -1,18 +1,14 @@
-import { Injectable, OnInit, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Web3Service } from './web3.service';
 import { Contract, TransactionReceipt } from 'web3/types';
 import { ToastrService } from 'ngx-toastr';
 import * as contract_artifacts from '../../../build/contracts/DDNSCore.json';
 
 @Injectable()
-export class ContractService implements OnDestroy {
+export class ContractService {
 	private DDNSCore: Contract;
 
 	constructor(private web3Service: Web3Service, private toastr: ToastrService) { }
-
-	ngOnDestroy() {
-		this.web3Service.accountsObservable.unsubscribe();
-	}
 
 	public async registerDomain(domainName: string, ipAddress: string, topLevelDomain: string
 	) {
@@ -30,9 +26,11 @@ export class ContractService implements OnDestroy {
 
 		const domainPrice = await this._getDomainPrice(domainName);
 
+		const from = await this.web3Service.getFromAccount();
+
 		return this.DDNSCore.methods
-			.registerDomain(domainName, ipAddress, topLevelDomain)
-			.send({ value: domainPrice })
+			.registerDomain(this.web3Service.fromUtf8(domainName), this.web3Service.fromUtf8(ipAddress), this.web3Service.fromUtf8(topLevelDomain))
+			.send({ from: from, value: domainPrice })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`${domainName}.${topLevelDomain} registration transaction hash is ${hash}.`);
 			})
@@ -50,7 +48,9 @@ export class ContractService implements OnDestroy {
 
 		const domainOwner = await this._getDomainOwner(domainName, topLevelDomain);
 
-		if (domainOwner !== this.DDNSCore.options.from) {
+		const from = await this.web3Service.getFromAccount();
+
+		if (domainOwner !== from) {
 			this.toastr.error(`You must be the owner of ${domainName}.${topLevelDomain} in order to renew the domain registration!`);
 			return;
 		}
@@ -58,8 +58,8 @@ export class ContractService implements OnDestroy {
 		const domainPrice = await this._getDomainPrice(domainName);
 
 		return this.DDNSCore.methods
-			.renewDomainRegistration(domainName, topLevelDomain)
-			.send({ value: domainPrice })
+			.renewDomainRegistration(this.web3Service.fromUtf8(domainName), this.web3Service.fromUtf8(topLevelDomain))
+			.send({ from: from, value: domainPrice })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`${domainName}.${topLevelDomain} renew transaction hash is ${hash}.`);
 			})
@@ -82,14 +82,16 @@ export class ContractService implements OnDestroy {
 
 		const domainOwner = await this._getDomainOwner(domainName, topLevelDomain);
 
-		if (domainOwner !== this.DDNSCore.options.from) {
+		const from = await this.web3Service.getFromAccount();
+
+		if (domainOwner !== from) {
 			this.toastr.error(`You must be the owner of ${domainName}.${topLevelDomain} in order to edit the domain ip!`);
 			return;
 		}
 
 		return this.DDNSCore.methods
-			.editDomainIp(domainName, topLevelDomain, newIpAddress)
-			.send()
+			.editDomainIp(this.web3Service.fromUtf8(domainName), this.web3Service.fromUtf8(topLevelDomain), this.web3Service.fromUtf8(newIpAddress))
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`${domainName}.${topLevelDomain} edit ip transaction hash is ${hash}.`);
 			})
@@ -113,14 +115,16 @@ export class ContractService implements OnDestroy {
 
 		const domainOwner = await this._getDomainOwner(domainName, topLevelDomain);
 
-		if (domainOwner !== this.DDNSCore.options.from) {
+		const from = await this.web3Service.getFromAccount();
+
+		if (domainOwner !== from) {
 			this.toastr.error(`You must be the owner of ${domainName}.${topLevelDomain} in order to transfer the domain ownership!`);
 			return;
 		}
 
 		return this.DDNSCore.methods
-			.transferOwnership(domainName, topLevelDomain, checksumAddress)
-			.send()
+			.transferOwnership(this.web3Service.fromUtf8(domainName), this.web3Service.fromUtf8(topLevelDomain), checksumAddress)
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`${domainName}.${topLevelDomain} ownership transfer transaction hash is ${hash}.`);
 			})
@@ -196,7 +200,9 @@ export class ContractService implements OnDestroy {
 			return;
 		}
 
-		const isOwnerOperating = await this._isOwnerOperating();
+		const from = await this.web3Service.getFromAccount();
+
+		const isOwnerOperating = await this._isOwnerOperating(from);
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to change the registration cost!!`);
 			return;
@@ -206,7 +212,7 @@ export class ContractService implements OnDestroy {
 
 		return this.DDNSCore.methods
 			.changeRegistrationCost(priceInWei)
-			.send()
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`Registration cost change transaction hash is ${hash}.`);
 			})
@@ -228,7 +234,9 @@ export class ContractService implements OnDestroy {
 			return;
 		}
 
-		const isOwnerOperating = await this._isOwnerOperating();
+		const from = await this.web3Service.getFromAccount();
+
+		const isOwnerOperating = await this._isOwnerOperating(from);
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to change the expiry period!!`);
 			return;
@@ -238,7 +246,7 @@ export class ContractService implements OnDestroy {
 
 		return this.DDNSCore.methods
 			.changeExpiryPeriod(periodInSeconds)
-			.send()
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`Expiry period change transaction hash is ${hash}.`);
 			})
@@ -260,7 +268,9 @@ export class ContractService implements OnDestroy {
 			return;
 		}
 
-		const isOwnerOperating = await this._isOwnerOperating();
+		const from = await this.web3Service.getFromAccount();
+
+		const isOwnerOperating = await this._isOwnerOperating(from);
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to change the wallet address!!`);
 			return;
@@ -268,7 +278,7 @@ export class ContractService implements OnDestroy {
 
 		return this.DDNSCore.methods
 			.changeWallet(checksumAddress)
-			.send()
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`Wallet change transaction hash is ${hash}.`);
 			})
@@ -284,7 +294,9 @@ export class ContractService implements OnDestroy {
 	public async withdrawEther(amount: (string | number)) {
 		await this._checkContract();
 
-		const isOwnerOperating = await this._isOwnerOperating();
+		const from = await this.web3Service.getFromAccount();
+
+		const isOwnerOperating = await this._isOwnerOperating(from);
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to withdraw funds!!`);
 			return;
@@ -294,7 +306,7 @@ export class ContractService implements OnDestroy {
 
 		return this.DDNSCore.methods
 			.withdraw(amountInWei)
-			.send()
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`Withdraw transaction hash is ${hash}.`);
 			})
@@ -322,7 +334,9 @@ export class ContractService implements OnDestroy {
 			return;
 		}
 
-		const isOwnerOperating = await this._isOwnerOperating();
+		const from = await this.web3Service.getFromAccount();
+
+		const isOwnerOperating = await this._isOwnerOperating(from);
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to set new owner!!`);
 			return;
@@ -330,7 +344,7 @@ export class ContractService implements OnDestroy {
 
 		return this.DDNSCore.methods
 			.setOwner(checksumAddress)
-			.send()
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`Owner setting transaction hash is ${hash}.`);
 			})
@@ -346,7 +360,9 @@ export class ContractService implements OnDestroy {
 	public async destroy() {
 		await this._checkContract();
 
-		const isOwnerOperating = await this._isOwnerOperating();
+		const from = await this.web3Service.getFromAccount();
+
+		const isOwnerOperating = await this._isOwnerOperating(from);
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to destroy it!!`);
 			return;
@@ -354,7 +370,7 @@ export class ContractService implements OnDestroy {
 
 		return this.DDNSCore.methods
 			.destroy()
-			.send()
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`Contract destroying transaction hash is ${hash}.`);
 			})
@@ -376,7 +392,9 @@ export class ContractService implements OnDestroy {
 			return;
 		}
 
-		const isOwnerOperating = await this._isOwnerOperating();
+		const from = await this.web3Service.getFromAccount();
+
+		const isOwnerOperating = await this._isOwnerOperating(from);
 		if (!isOwnerOperating) {
 			this.toastr.error(`You must be the owner of the DDNS contract in order to destroy the contract and send it's funds!!`);
 			return;
@@ -384,7 +402,7 @@ export class ContractService implements OnDestroy {
 
 		return this.DDNSCore.methods
 			.destroyAndSend(checksumAddress)
-			.send()
+			.send({ from: from })
 			.on('transactionHash', (hash: string) => {
 				this.toastr.info(`Contract destroying and fund sending transaction hash is ${hash}.`);
 			})
@@ -399,15 +417,8 @@ export class ContractService implements OnDestroy {
 
 	private async _initContract() {
 		const ABI = contract_artifacts['abi'];
-		const address = contract_artifacts['networks']['1520559567221'].address;
+		const address = contract_artifacts['networks']['42'].address;
 		this.DDNSCore = await this.web3Service.getContract(ABI, address);
-		this._watchAccount();
-	}
-
-	private _watchAccount() {
-		this.web3Service.accountsObservable.subscribe((accounts) => {
-			this.DDNSCore.options.from = accounts[0];
-		});
 	}
 
 	private async _checkContract() {
@@ -432,11 +443,11 @@ export class ContractService implements OnDestroy {
 	}
 
 	private async _getDomainPrice(domainName: string) {
-		return this.DDNSCore.methods.getDomainPrice(domainName).call();
+		return this.DDNSCore.methods.getDomainPrice(this.web3Service.fromUtf8(domainName)).call();
 	}
 
 	private async _getDomainKey(domainName: string, topLevelDomain: string) {
-		return this.DDNSCore.methods.getDomainKey(domainName, topLevelDomain).call();
+		return this.DDNSCore.methods.getDomainKey(this.web3Service.fromUtf8(domainName), this.web3Service.fromUtf8(topLevelDomain)).call();
 	}
 
 	private async _getDomainDetails(domainName: string, topLevelDomain: string) {
@@ -448,8 +459,8 @@ export class ContractService implements OnDestroy {
 		return (await this._getDomainDetails(domainName, topLevelDomain))[3];
 	}
 
-	private async _isOwnerOperating() {
+	private async _isOwnerOperating(fromAccount) {
 		const contractOwner = await this.getOwner();
-		return contractOwner === this.DDNSCore.options.from;
+		return contractOwner === fromAccount;
 	}
 }
