@@ -178,7 +178,10 @@ contract DDNSCore is DDNSBanking, Destructible {
 			while (_domainName[PRICE_INCREASE_BOUND_INDEX - multiplier] == BYTES_DEFAULT_VALUE) {
 				multiplier++;
 			}
-			return registrationCost.add(registrationCost.div(multiplier * 10));
+
+			uint256 additionalTax = registrationCost.mul(multiplier * 10);
+			additionalTax = additionalTax.div(100);
+			return registrationCost.add(additionalTax);
 		}
 		return registrationCost;
 	}
