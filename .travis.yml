@@ -1,3 +1,6 @@
+before_install:
+  - chmod +x ./ci/install-deps.sh
+  - chmod +x ./ci/build.sh
 language: node_js
 node_js:
 - "lts/*"
