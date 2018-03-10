@@ -137,7 +137,7 @@ export class ContractService {
 			});
 	}
 
-	public async getOwnerReceipts(address: string) {
+	public async getReceiptReport(address: string, index: number) {
 		await this._checkContract();
 
 		const checksumAddress = this.web3Service.getChecksumAddress(address);
@@ -146,7 +146,7 @@ export class ContractService {
 			return;
 		}
 
-		return this.DDNSCore.methods.receipts(checksumAddress).call();
+		return this.DDNSCore.methods.receipts(checksumAddress, index).call().catch((err) => {});
 	}
 
 	public async getDomainDetails(domainName: string, topLevelDomain: string) {
@@ -176,14 +176,14 @@ export class ContractService {
 		await this._checkContract();
 
 		const registrationCost = await this.DDNSCore.methods.registrationCost().call();
-		return (this.web3Service.fromWei(registrationCost)).toString(10);
+		return this.web3Service.fromWei(registrationCost);
 	}
 
 	public async getExpiryPeriodInDays(): Promise<string> {
 		await this._checkContract();
 
-		const expiryPeriod = await this.DDNSCore.methods.expiryPeriod().call();
-		return (expiryPeriod.div(86400)).toString(10); // 86400 seconds in 24h
+		const expiryPeriod = Number(await this.DDNSCore.methods.expiryPeriod().call());
+		return (expiryPeriod / 86400).toString(10); // 86400 seconds in 24h
 	}
 
 	public async getWallet() {

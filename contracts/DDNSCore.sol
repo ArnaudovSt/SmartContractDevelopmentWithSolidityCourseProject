@@ -172,11 +172,6 @@ contract DDNSCore is DDNSBanking, Destructible {
 		return keccak256(_domainName, _topLevelDomain);
 	}
 
-	function getReceipts(address _owner) public view returns (Receipt[]) {
-		require(_owner != address(0));
-		return receipts[_owner];
-	}
-
 	function _adjustPriceToNameLength(bytes32 _domainName) private view returns (uint256) {
 		if (_domainName[PRICE_INCREASE_BOUND_INDEX] == BYTES_DEFAULT_VALUE) {
 			uint8 multiplier = 1;
