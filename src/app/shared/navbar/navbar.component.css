@@ -4,3 +4,8 @@ nav {
 	top: 0;
 	width: 100%;
 }
+
+.active {
+	font-weight: bold;
+	font-style: oblique;
+}

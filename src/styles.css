@@ -3,6 +3,10 @@ html {
 	background-color: #e9ecef;
 }
 
+* {
+	font-family: fantasy;
+}
+
 main {
 	margin-top: 3.5em;
 }
