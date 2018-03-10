@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -x
 set -e
-ganache-cli -i 42 -l 0xfffffffffff -g 0x01 -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" > /dev/null &
+ganache-cli -i 42 -l 0xfffffffffff -g 0x01 -e 4200 -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" > /dev/null &
 TESTRPC_PID=$!
 trap "kill $TESTRPC_PID" EXIT INT TERM
 

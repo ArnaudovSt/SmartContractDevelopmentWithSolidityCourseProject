@@ -252,25 +252,24 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		assert.equal(result[3], anotherAccount, "Wrong domainOwner value.");
 	});
 
-	// it("registerDomain Should issue receipt when passed valid arguments", async () => {
-	// 	// Arrange
-	// 	const domainName = "notshortanymore";
-	// 	const ip = "127.0.0.1";
-	// 	const topLevelDomain = "co.uk";
-	// 	const currentPrice = await sut.registrationCost();
-	// 	// Act
-	// 	const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
+	it("registerDomain Should issue receipt when passed valid arguments", async () => {
+		// Arrange
+		const domainName = "notshortanymore";
+		const ip = "127.0.0.1";
+		const topLevelDomain = "co.uk";
+		const currentPrice = await sut.registrationCost();
+		// Act
+		const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 
-	// 	const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
+		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 
-	// 	const result = await sut.receipts(owner); // Error: Invalid number of arguments to Solidity function
-	// 	// Assert
-	// 	assert.ok(result, "No receipts found for the given user address");
-	// 	assert.equal(web3.toUtf8(result[0][0]), domainName, "Wrong domainName value");
-	// 	assert.equal(result[0][1], currentPrice, "Wrong amountPaid value");
-	// 	assert.equal(result[0][2], now, "Wrong timeBought value");
-	// 	assert.equal(result.length, 1);
-	// });
+		const result = await sut.receipts(owner, 0);
+		// Assert
+		assert.ok(result, "No receipts found for the given user address");
+		assert.equal(web3.toUtf8(result[0]), domainName, "Wrong domainName value");
+		assert.equal(result[1].toString(10), currentPrice, "Wrong amountPaid value");
+		assert.equal(result[2].toString(10), now, "Wrong timeBought value");
+	});
 
 	it("renewDomainRegistration Should throw when the sent funds are insufficient", async () => {
 		// Arrange
@@ -345,25 +344,25 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		assert.equal(web3.toUtf8(result.args.topLevelDomain), topLevelDomain, "Wrong topLevelDomain value.");
 	});
 
-	// it("renewDomainRegistration Should issue receipt when passed valid arguments", async () => {
-	// 	// Arrange
-	// 	const domainName = "notshortanymore";
-	// 	const ip = "127.0.0.1";
-	// 	const topLevelDomain = "co.uk";
-	// 	const currentPrice = await sut.registrationCost();
-	// 	const initialTransaction = await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
-	// 	const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
-	// 	// Act
-	// 	await sut.renewDomainRegistration(domainName, topLevelDomain, { from: owner, value: currentPrice });
+	it("renewDomainRegistration Should issue receipt when passed valid arguments", async () => {
+		// Arrange
+		const domainName = "notshortanymore";
+		const ip = "127.0.0.1";
+		const topLevelDomain = "co.uk";
+		const currentPrice = await sut.registrationCost();
+		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
+		// Act
+		const currentTransaction = await sut.renewDomainRegistration(domainName, topLevelDomain, { from: owner, value: currentPrice });
 
-	// 	const result = await sut.receipts(owner); // Error: Invalid number of arguments to Solidity function
-	// 	// Assert
-	// 	assert.ok(result, "No receipts found for the given user address");
-	// 	assert.equal(web3.toUtf8(result[1][0]), domainName, "Wrong domainName value");
-	// 	assert.equal(result[1][1], currentPrice, "Wrong amountPaid value");
-	// 	assert.equal(result[1][2], now, "Wrong timeBought value");
-	// 	assert.equal(result.length, 2);
-	// });
+		const now = web3.eth.getBlock(currentTransaction.receipt.blockNumber).timestamp;
+
+		const result = await sut.receipts(owner, 1);
+		// Assert
+		assert.ok(result, "No receipts found for the given user address");
+		assert.equal(web3.toUtf8(result[0]), domainName, "Wrong domainName value");
+		assert.equal(result[1].toString(10), currentPrice, "Wrong amountPaid value");
+		assert.equal(result[2].toString(10), now, "Wrong timeBought value");
+	});
 
 	it("editDomainIp Should throw when the invoker is not the domain owner", async () => {
 		// Arrange
