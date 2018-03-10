@@ -492,4 +492,58 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		assert.equal(result.args.from, owner, "Wrong sender address value.");
 		assert.equal(result.args.to, anotherAccount, "Wrong receiver address value.");
 	});
-})
+
+	it("getDomainPrice Should return regular price, when passed domain with 10 symbols or more", async () => {
+		// Arrange
+		const domainName = "tensymbols";
+		const currentPrice = await sut.registrationCost();
+		// Act
+		const result = await sut.getDomainPrice(domainName);
+		// Assert
+		assert.deepEqual(result, currentPrice);
+	});
+
+	it("getDomainPrice Should return 10% higher price, when passed domain with 9 symbols", async () => {
+		// Arrange
+		const domainName = "tensymbol";
+		let currentPrice = await sut.registrationCost();
+		currentPrice = currentPrice.mul(1.1);
+		// Act
+		const result = await sut.getDomainPrice(domainName);
+		// Assert
+		assert.deepEqual(result, currentPrice);
+	});
+
+	it("getDomainPrice Should return 20% higher price, when passed domain with 8 symbols", async () => {
+		// Arrange
+		const domainName = "tensymbo";
+		let currentPrice = await sut.registrationCost();
+		currentPrice = currentPrice.mul(1.2);
+		// Act
+		const result = await sut.getDomainPrice(domainName);
+		// Assert
+		assert.deepEqual(result, currentPrice);
+	});
+
+	it("getDomainPrice Should return 30% higher price, when passed domain with 7 symbols", async () => {
+		// Arrange
+		const domainName = "tensymb";
+		let currentPrice = await sut.registrationCost();
+		currentPrice = currentPrice.mul(1.3);
+		// Act
+		const result = await sut.getDomainPrice(domainName);
+		// Assert
+		assert.deepEqual(result, currentPrice);
+	});
+
+	it("getDomainPrice Should return 40% higher price, when passed domain with 6 symbols", async () => {
+		// Arrange
+		const domainName = "tensym";
+		let currentPrice = await sut.registrationCost();
+		currentPrice = currentPrice.mul(1.4);
+		// Act
+		const result = await sut.getDomainPrice(domainName);
+		// Assert
+		assert.deepEqual(result, currentPrice);
+	});
+});

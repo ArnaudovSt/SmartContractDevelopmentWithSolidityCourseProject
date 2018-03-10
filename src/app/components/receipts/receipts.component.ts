@@ -14,7 +14,7 @@ export class ReceiptsComponent implements OnInit {
 	report = {
 		owner: '',
 		receipts: []
-	}
+	};
 
 	constructor(private contractService: ContractService, private web3Service: Web3Service) { }
 
@@ -27,8 +27,8 @@ export class ReceiptsComponent implements OnInit {
 		this.report.receipts = [];
 		let index = 0;
 		while (true) {
-			let currentReceipt = await this.contractService.getReceiptReport(this.report.owner, index);
-			
+			const currentReceipt = await this.contractService.getReceiptReport(this.report.owner, index);
+
 			if (!currentReceipt) {
 				break;
 			}

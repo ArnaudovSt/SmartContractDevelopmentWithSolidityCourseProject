@@ -14,7 +14,7 @@ export class HomeComponent implements OnInit {
 		owner: '',
 		registrationCost: '',
 		expiryPeriod: ''
-	}
+	};
 
 	isContractDestroyed = false;
 

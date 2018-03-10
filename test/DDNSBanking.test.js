@@ -226,4 +226,4 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		assert.equal(result.args._wallet, owner, "Owner is not logged as wallet.");
 		assert.equal(result.args._amount.toString(10), transferValue, "Wrong transfer value.");
 	});
-})
+});

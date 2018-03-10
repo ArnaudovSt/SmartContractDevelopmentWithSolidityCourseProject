@@ -115,7 +115,7 @@ export class DomainComponent implements OnInit {
 	clearDomainDetails(event?) {
 		if (event) {
 			const key = event.key;
-			if (key === "Backspace" || key === "Delete") {
+			if (key === 'Backspace' || key === 'Delete') {
 				this.domainDetails = {
 					domainName: '',
 					topLevelDomain: '',
@@ -138,7 +138,7 @@ export class DomainComponent implements OnInit {
 	clearDomainPrice(event?) {
 		if (event) {
 			const key = event.key;
-			if (key === "Backspace" || key === "Delete") {
+			if (key === 'Backspace' || key === 'Delete') {
 				this.domainPrice = {
 					domainName: '',
 					price: ''

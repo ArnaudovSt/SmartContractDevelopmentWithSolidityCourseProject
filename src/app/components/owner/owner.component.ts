@@ -10,7 +10,7 @@ export class OwnerComponent implements OnInit {
 	contractInfo = {
 		wallet: '',
 		owner: ''
-	}
+	};
 
 	newRegistrationCost = '';
 
