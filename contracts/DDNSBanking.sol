@@ -5,21 +5,21 @@ import './modifiers/Owned.sol';
 
 contract DDNSBanking is Owned {
 	event LogCostChange(
-		uint256 _newPrice
+		uint256 newPrice
 	);
 
 	event LogExpiryPeriodChange(
-		uint256 _newPeriod
+		uint256 newPeriod
 	);
 
 	event LogWalletChange(
-		address _newWallet
+		address newWallet
 	);
 
 	event LogWithdrawal(
-		address indexed _invoker,
-		address indexed _wallet,
-		uint256 _amount
+		address indexed invoker,
+		address indexed wallet,
+		uint256 amount
 	);
 
 	uint256 public registrationCost = 1 ether;
