@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../environments/environment';
 // import Web3 from 'web3'; /* https://github.com/ethereum/web3.js/issues/1155 */
 const Web3 = require('web3');
 
@@ -8,7 +9,6 @@ declare let window: any;
 @Injectable()
 export class Web3Service {
 	private web3: any;
-	private readonly provider: string = 'http://localhost:8545';
 
 	constructor(private toastr: ToastrService) {
 		window.addEventListener('load', (event) => {
@@ -68,7 +68,7 @@ export class Web3Service {
 			// Hack to provide backwards compatibility for Truffle, which uses web3js 0.20.x
 			Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send;
 			// fallback - use your fallback strategy (local node / hosted node)
-			this.web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
+			this.web3 = new Web3(new Web3.providers.HttpProvider(environment.provider));
 		}
 	}
 }

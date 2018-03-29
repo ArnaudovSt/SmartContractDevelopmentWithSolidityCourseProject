@@ -426,8 +426,8 @@ export class ContractService {
 	}
 
 	private _isValidDomain(domainName: string, topLevelDomain = 'com') {
-		const pattern = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/;
-		const matchesPattern = (`https://${domainName}.${topLevelDomain}`).match(pattern);
+		const pattern = /(?=^.{9,65}$)(^((?!-)[a-zA-Z0-9-]{6,32}(?<!-)\.)+[a-zA-Z\.]{2,32}(?<!\.)$)/;
+		const matchesPattern = (`${domainName}.${topLevelDomain}`).match(pattern);
 		const validDomainNameLength = domainName.length > 5;
 		const validTopLevelDomainLength = topLevelDomain.length > 1;
 		return (matchesPattern && validDomainNameLength && validTopLevelDomainLength);

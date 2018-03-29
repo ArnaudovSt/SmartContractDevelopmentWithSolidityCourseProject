@@ -6,6 +6,7 @@ import * as contractArtifacts from '../../../build/contracts/DDNSCore.json';
 
 export const environment = {
 	production: false,
+	provider: 'http://localhost:8545',
 	ABI: contractArtifacts['abi'],
 	address: contractArtifacts['networks']['42'].address
 };
