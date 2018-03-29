@@ -61,7 +61,7 @@ typings/
 .vscode/
 build/
 bin/
-coverage/
+# coverage/
 coverage.json
 package-lock.json
 .idea

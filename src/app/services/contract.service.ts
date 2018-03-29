@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Web3Service } from './web3.service';
 import { Contract, TransactionReceipt } from 'web3/types';
 import { ToastrService } from 'ngx-toastr';
-import * as contract_artifacts from '../../../build/contracts/DDNSCore.json';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class ContractService {
@@ -416,9 +416,7 @@ export class ContractService {
 	}
 
 	private async _initContract() {
-		const ABI = contract_artifacts['abi'];
-		const address = contract_artifacts['networks']['42'].address;
-		this.DDNSCore = await this.web3Service.getContract(ABI, address);
+		this.DDNSCore = await this.web3Service.getContract(environment.ABI, environment.address);
 	}
 
 	private async _checkContract() {
