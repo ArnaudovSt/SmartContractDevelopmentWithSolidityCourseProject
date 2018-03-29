@@ -91,7 +91,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		await sut.changeRegistrationCost(newCost, { from: owner });
 		const result = await promiEvent;
 		// Assert
-		assert.equal(result.args._newPrice, newCost);
+		assert.equal(result.args.newPrice, newCost);
 	});
 
 	it("changeExpiryPeriod Should change expiryPeriod when invoked from owner with valid arguments", async () => {
@@ -132,7 +132,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		await sut.changeExpiryPeriod(newExpiryPeriod, { from: owner });
 		const result = await promiEvent;
 		// Assert
-		assert.equal(result.args._newPeriod, newExpiryPeriod);
+		assert.equal(result.args.newPeriod, newExpiryPeriod);
 	});
 
 	it("changeWallet Should change wallet when invoked from owner with valid arguments", async () => {
@@ -169,7 +169,7 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		await sut.changeWallet(wallet, { from: owner });
 		const result = await promiEvent;
 		// Assert
-		assert.equal(result.args._newWallet, wallet);
+		assert.equal(result.args.newWallet, wallet);
 	});
 
 	it("withdraw Should allocate specified amount when invoked from owner with valid arguments", async () => {
@@ -222,8 +222,8 @@ contract('DDNSBanking', ([owner, wallet, anotherAccount]) => {
 		await sut.withdraw(transferValue, { from: owner });
 		const result = await promiEvent;
 		// Assert
-		assert.equal(result.args._invoker, owner, "Owner is not logged as invoker.");
-		assert.equal(result.args._wallet, owner, "Owner is not logged as wallet.");
-		assert.equal(result.args._amount.toString(10), transferValue, "Wrong transfer value.");
+		assert.equal(result.args.invoker, owner, "Owner is not logged as invoker.");
+		assert.equal(result.args.wallet, owner, "Owner is not logged as wallet.");
+		assert.equal(result.args.amount.toString(10), transferValue, "Wrong transfer value.");
 	});
 });

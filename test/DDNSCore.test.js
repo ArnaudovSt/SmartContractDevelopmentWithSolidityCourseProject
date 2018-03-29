@@ -240,7 +240,9 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		// Act
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
 
-		await increaseTime(constants.year + 1);
+	const expiryPeriod = await sut.expiryPeriod();
+
+		await increaseTime(Number(expiryPeriod.toString(10)) + 42);
 
 		await sut.registerDomain(domainName, ip, topLevelDomain, { from: anotherAccount, value: currentPrice });
 
@@ -313,6 +315,30 @@ contract('DDNSCore', ([owner, wallet, anotherAccount]) => {
 		const expiryPeriod = await sut.expiryPeriod();
 		const now = web3.eth.getBlock(initialTransaction.receipt.blockNumber).timestamp;
 		const expectedValidUntil = expiryPeriod.add(expiryPeriod).add(now);
+		// Assert
+		assert.ok(domainDetails, "No domain with such name was found.");
+		assert.deepEqual(domainDetails[2], expectedValidUntil, "Wrong validUntil value.");
+	});
+
+	it("renewDomainRegistration Should renew expired domain registration and set proper validUntil period when the passed arguments are valid", async () => {
+		// Arrange
+		const domainName = "notshortanymore";
+		const ip = "127.0.0.1";
+		const topLevelDomain = "co.uk";
+		const currentPrice = await sut.registrationCost();
+		await sut.registerDomain(domainName, ip, topLevelDomain, { from: owner, value: currentPrice });
+		// Act
+		const expiryPeriod = await sut.expiryPeriod();
+
+		await increaseTime(Number(expiryPeriod.toString(10)) + 42);
+
+		const renewTransaction = await sut.renewDomainRegistration(domainName, topLevelDomain, { from: owner, value: currentPrice });
+
+		const domainKey = await sut.getDomainKey(domainName, topLevelDomain);
+		const domainDetails = await sut.domains(domainKey);
+
+		const now = web3.eth.getBlock(renewTransaction.receipt.blockNumber).timestamp;
+		const expectedValidUntil = expiryPeriod.add(now);
 		// Assert
 		assert.ok(domainDetails, "No domain with such name was found.");
 		assert.deepEqual(domainDetails[2], expectedValidUntil, "Wrong validUntil value.");

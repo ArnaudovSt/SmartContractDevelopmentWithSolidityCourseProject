@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ContractService } from '../../services/contract.service';
 import { Web3Service } from '../../services/web3.service';
+import { GlobalsService } from '../../services/globals.service';
 
 @Component({
 	selector: 'app-domain',
@@ -47,38 +48,38 @@ export class DomainComponent implements OnInit {
 
 	isContractDestroyed = false;
 
-	constructor(private contractService: ContractService, private web3Service: Web3Service) { }
+	constructor(private _contractService: ContractService, private _web3Service: Web3Service, private _globals: GlobalsService) { }
 
 	ngOnInit(): void {
 		this._checkContract();
 	}
 
 	public async registerDomain() {
-		await this.contractService.registerDomain(this.registration.domainName, this.registration.ipAddress, this.registration.topLevelDomain);
+		await this._contractService.registerDomain(this.registration.domainName, this.registration.ipAddress, this.registration.topLevelDomain);
 	}
 
 	public async renewDomainRegistration() {
-		await this.contractService.renewDomainRegistration(this.renew.domainName, this.renew.topLevelDomain);
+		await this._contractService.renewDomainRegistration(this.renew.domainName, this.renew.topLevelDomain);
 	}
 
 	public async editDomainIp() {
-		await this.contractService.editDomainIp(this.editIp.domainName, this.editIp.topLevelDomain, this.editIp.newIp);
+		await this._contractService.editDomainIp(this.editIp.domainName, this.editIp.topLevelDomain, this.editIp.newIp);
 	}
 
 	public async transferOwnership() {
-		await this.contractService.transferOwnership(this.transfer.domainName, this.transfer.topLevelDomain, this.transfer.newOwner);
+		await this._contractService.transferOwnership(this.transfer.domainName, this.transfer.topLevelDomain, this.transfer.newOwner);
 	}
 
 	public async getDomainDetails() {
-		const details = await this.contractService.getDomainDetails(this.domainDetails.domainName, this.domainDetails.topLevelDomain);
+		const details = await this._contractService.getDomainDetails(this.domainDetails.domainName, this.domainDetails.topLevelDomain);
 
-		this.domainDetails.ipAddress = this.web3Service.toUtf8(details[1]);
+		this.domainDetails.ipAddress = this._web3Service.toUtf8(details[1]);
 		this.domainDetails.validUntil = this._transferToDateString(details[2]);
 		this.domainDetails.owner = details[3];
 	}
 
 	public async getDomainPrice() {
-		this.domainPrice.price = await this.contractService.getDomainPriceInEther(this.domainPrice.domainName);
+		this.domainPrice.price = await this._contractService.getDomainPriceInEther(this.domainPrice.domainName);
 	}
 
 	clearRegistration() {
@@ -158,9 +159,6 @@ export class DomainComponent implements OnInit {
 	}
 
 	private async _checkContract() {
-		const owner = await this.contractService.getOwner();
-		if (Number(owner) === 0) {
-			this.isContractDestroyed = true;
-		}
+		this.isContractDestroyed = this._globals.isContractDestroyed;
 	}
 }
