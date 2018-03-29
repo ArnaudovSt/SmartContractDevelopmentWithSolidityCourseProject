@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/ArnaudovSt/SmartContractDevelopmentWithSolidityCourseProject.svg?branch=develop)](https://travis-ci.org/ArnaudovSt/SmartContractDevelopmentWithSolidityCourseProject)
 
 # © Decentralized Domain Name System, 2018.
-### Designed and developed especially for Smart Contract Development with Solidity Course, Sofia, January 2018.
+### Designed and developed especially for "Smart Contract Development with Solidity Course", Sofia, January 2018.
 
 ## Project Description
 DDNS is a project that uses Ethereum blockchain to provide a decentralized purchase, management and ownership of domains. The project consists of a smart contract layer to hold the logic and information about domains and their owners and an Angular web application that provides a user interaction with the contracts (using Web3.js and Metamask). 
