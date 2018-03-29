@@ -12,6 +12,7 @@
 	  "error",
 	  "tab"
 	],
-	"arg-overflow": 0
+	"arg-overflow": 0,
+	"emit": 0
   }
 }

@@ -48,7 +48,7 @@ contract DDNSBanking is Owned {
 	}
 
 	function withdraw(uint256 _amount) public onlyOwner {
-		require(this.balance >= _amount);
+		require(address(this).balance >= _amount);
 		wallet.transfer(_amount);
 		LogWithdrawal(owner, wallet, _amount);
 	}
