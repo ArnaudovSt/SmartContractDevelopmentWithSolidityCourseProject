@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class NavbarComponent implements OnInit {
 
-	private readonly brand: string = 'DDNS';
+	brand: string = 'DDNS';
 
 	constructor() { }
 

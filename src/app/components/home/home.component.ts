@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ContractService } from '../../services/contract.service';
 import { Web3Service } from '../../services/web3.service';
+import { GlobalsService } from '../../services/globals.service';
 
 @Component({
 	selector: 'app-home',
@@ -18,21 +19,19 @@ export class HomeComponent implements OnInit {
 
 	isContractDestroyed = false;
 
-	constructor(private contractService: ContractService, private web3Service: Web3Service) { }
+	constructor(private _contractService: ContractService,  private _globals: GlobalsService) { }
 
 	ngOnInit() {
 		this._getContractInfo();
 	}
 
 	private async _getContractInfo() {
-		this.contractInfo.wallet = await this.contractService.getWallet();
-		this.contractInfo.owner = await this.contractService.getOwner();
-		this.contractInfo.registrationCost = await this.contractService.getRegistrationCost();
-		this.contractInfo.expiryPeriod = await this.contractService.getExpiryPeriodInDays();
-		if (Number(this.contractInfo.owner) === 0) {
-			this.isContractDestroyed = true;
-			return;
+		this.isContractDestroyed = this._globals.isContractDestroyed;
+		if (!this.isContractDestroyed) {
+			this.contractInfo.wallet = await this._contractService.getWallet();
+			this.contractInfo.owner = await this._contractService.getOwner();
+			this.contractInfo.registrationCost = await this._contractService.getRegistrationCost();
+			this.contractInfo.expiryPeriod = await this._contractService.getExpiryPeriodInDays();
 		}
 	}
-
 }
